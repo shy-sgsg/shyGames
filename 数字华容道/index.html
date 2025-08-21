@@ -2,15 +2,33 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>数字华容道</title>
     <link rel="stylesheet" href="style.css">
-    <!-- 删除或注释掉下面的 <style> 标签，避免覆盖 style.css 的 .tile 样式 -->
-    <!--
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <style>
-        /* ...所有 .tile 相关样式和棋盘相关样式请删除或注释掉... */
+        @media (max-width: 480px) {
+            .container {
+                max-width: 98vw;
+                padding: 8px;
+            }
+            .game-board-container {
+                max-width: 98vw;
+                width: 98vw;
+                height: 98vw;
+                min-width: 240px;
+                min-height: 240px;
+            }
+            #game-board {
+                width: 100%;
+                height: 100%;
+            }
+            .tile {
+                width: 22vw !important;
+                height: 22vw !important;
+                font-size: 7vw !important;
+            }
+        }
     </style>
-    -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
