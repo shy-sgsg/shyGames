@@ -19,7 +19,12 @@
     <style>
         body {
             font-family: 'Noto Sans SC', sans-serif;
-            background-color: #f0f4f8; /* 一个柔和的背景色 */
+            background-color: #f0f4f8;
+        }
+        .game-card {
+            min-width: 260px;
+            max-width: 400px;
+            margin: 0 auto;
         }
     </style>
 </head>
@@ -30,7 +35,7 @@
         <p class="text-gray-600 mt-2">点击下方的卡片开始游戏！</p>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
 
         <a href="2048/2048v2.4.html" class="game-card block bg-white rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden">
             <div class="p-6 flex flex-col items-center justify-center h-48 bg-[#edc22e]">

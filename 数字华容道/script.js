@@ -88,11 +88,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // 初始创建方块
     function createTiles() {
         gameBoard.innerHTML = '';
-        // 参考2048做法，使用棋盘容器的 clientWidth，gap 与 style.css 保持一致
+        // 棋盘最大宽度为360px，移动端和桌面都居中且不占满全屏
         const gridSize = 4;
-        const boardWidth = gameBoard.clientWidth;
+        const boardMaxWidth = Math.min(gameBoard.parentElement.offsetWidth * 0.9, 360);
+        gameBoard.style.width = `${boardMaxWidth}px`;
+        gameBoard.style.height = `${boardMaxWidth}px`;
+        gameBoard.style.margin = "0 auto";
         const gap = 8; // px
-        const tileSize = (boardWidth - gap * (gridSize - 1)) / gridSize;
+        const tileSize = (boardMaxWidth - gap * (gridSize - 1)) / gridSize;
         tiles.forEach((number, index) => {
             const tile = document.createElement('div');
             tile.classList.add('tile');
@@ -123,9 +126,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // 更新方块的CSS位置
     function updateTilesPosition() {
         const gridSize = 4;
-        const boardWidth = gameBoard.clientWidth;
+        const boardMaxWidth = Math.min(gameBoard.parentElement.offsetWidth * 0.9, 360);
+        gameBoard.style.width = `${boardMaxWidth}px`;
+        gameBoard.style.height = `${boardMaxWidth}px`;
+        gameBoard.style.margin = "0 auto";
         const gap = 8;
-        const tileSize = (boardWidth - gap * (gridSize - 1)) / gridSize;
+        const tileSize = (boardMaxWidth - gap * (gridSize - 1)) / gridSize;
         const allTiles = gameBoard.querySelectorAll('.tile');
         allTiles.forEach(tileElement => {
             const number = tileElement.dataset.number ? parseInt(tileElement.dataset.number) : 0;
