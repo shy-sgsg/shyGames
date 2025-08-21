@@ -88,22 +88,26 @@ document.addEventListener('DOMContentLoaded', () => {
     function setBoardContainerSize() {
         // 设置棋盘容器和背景的最大宽度
         const container = gameBoard.parentElement;
-        const maxBoardSize = Math.min(container.offsetWidth * 0.9, 360);
+        // 手机端用屏幕宽度的90%，桌面最大360px
+        const isMobile = window.innerWidth <= 480;
+        const maxBoardSize = isMobile
+            ? Math.max(Math.min(window.innerWidth * 0.9, 360), 240)
+            : Math.min(container.offsetWidth * 0.9, 360);
         container.style.width = `${maxBoardSize}px`;
         container.style.height = `${maxBoardSize}px`;
         container.style.margin = "0 auto";
+        return maxBoardSize;
     }
 
     // 初始创建方块
     function createTiles() {
-        setBoardContainerSize();
+        const boardMaxWidth = setBoardContainerSize();
         gameBoard.innerHTML = '';
         const gridSize = 4;
-        const boardMaxWidth = Math.min(gameBoard.parentElement.offsetWidth * 0.9, 360);
         gameBoard.style.width = `${boardMaxWidth}px`;
         gameBoard.style.height = `${boardMaxWidth}px`;
         gameBoard.style.margin = "0 auto";
-        const gap = 8; // px
+        const gap = 8;
         const tileSize = (boardMaxWidth - gap * (gridSize - 1)) / gridSize;
         tiles.forEach((number, index) => {
             const tile = document.createElement('div');
@@ -122,7 +126,8 @@ document.addEventListener('DOMContentLoaded', () => {
             tile.style.left = `${col * (tileSize + gap)}px`;
             tile.style.top = `${row * (tileSize + gap)}px`;
             tile.style.lineHeight = `${tileSize}px`;
-            tile.style.fontSize = `${Math.max(tileSize * 0.42, 18)}px`;
+            // 字体大小限制，防止数字块太大
+            tile.style.fontSize = `${Math.max(Math.min(tileSize * 0.42, 32), 16)}px`;
             tile.style.transition = 'transform 0.25s cubic-bezier(.4,2,.3,1), left 0.25s, top 0.25s';
             tile.style.transform = 'scale(0.8)';
             setTimeout(() => {
@@ -134,9 +139,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 更新方块的CSS位置
     function updateTilesPosition() {
-        setBoardContainerSize();
+        const boardMaxWidth = setBoardContainerSize();
         const gridSize = 4;
-        const boardMaxWidth = Math.min(gameBoard.parentElement.offsetWidth * 0.9, 360);
         gameBoard.style.width = `${boardMaxWidth}px`;
         gameBoard.style.height = `${boardMaxWidth}px`;
         gameBoard.style.margin = "0 auto";
@@ -153,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tileElement.style.left = `${col * (tileSize + gap)}px`;
             tileElement.style.top = `${row * (tileSize + gap)}px`;
             tileElement.style.lineHeight = `${tileSize}px`;
-            tileElement.style.fontSize = `${Math.max(tileSize * 0.42, 18)}px`;
+            tileElement.style.fontSize = `${Math.max(Math.min(tileSize * 0.42, 32), 16)}px`;
             tileElement.style.transition = 'transform 0.25s cubic-bezier(.4,2,.3,1), left 0.25s, top 0.25s';
             tileElement.style.transform = 'scale(1.08)';
             setTimeout(() => {
