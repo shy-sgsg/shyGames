@@ -3,9 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <meta http-equiv="Expires" content="0" />
     <title>2048 游戏</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -73,20 +70,13 @@
 <body class="game-body flex flex-col lg:flex-row items-center justify-center min-h-screen p-4 text-gray-800 space-y-8 lg:space-y-0 lg:space-x-8">
 
     <div class="w-full max-w-md mx-auto flex flex-col items-center">
-        <header class="w-full">
-            <div class="flex items-center justify-between mb-2">
-                <h1 class="text-5xl font-bold text-gray-700">2048</h1>
-                <div class="flex items-center space-x-2">
-                    <a href="index.html" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200">
-                        返回大厅
-                    </a>
-                    <div class="bg-gray-700 text-white p-2 px-4 rounded-lg text-center">
-                        <div class="text-xs uppercase font-bold tracking-wider">分数</div>
-                        <div id="score" class="text-2xl font-bold">0</div>
-                    </div>
+        <header class="flex items-center justify-between mb-4 w-full">
+            <h1 class="text-5xl font-bold text-gray-700">2048</h1>
+            <div class="flex items-center space-x-2">
+                <div class="bg-gray-700 text-white p-2 px-4 rounded-lg text-center">
+                    <div class="text-xs uppercase font-bold tracking-wider">分数</div>
+                    <div id="score" class="text-2xl font-bold">0</div>
                 </div>
-            </div>
-            <div class="flex items-center justify-end space-x-2 w-full">
                 <button id="new-game-button" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200">
                     新游戏
                 </button>
@@ -122,48 +112,8 @@
         <p id="no-scores-message" class="text-center text-gray-500 mt-4 hidden">暂无分数记录。</p>
     </div>
 
-    <script src="https://static.tcb.qq.com/sdk/latest/tcb.js" crossorigin="anonymous"></script>
     <script>
-        // *** 你的腾讯云环境 ID ***
-        const ENV_ID = 'cloud1-5g3ddo4a9389ebe2'; 
-        let app = null, db = null;
-
-        window.onload = async function() {
-            try {
-                // 检查 tcb 是否加载成功
-                if (typeof tcb === 'undefined') {
-                    alert('腾讯云服务加载失败，请检查您的网络连接。');
-                    console.error('tcb-js-sdk 加载失败，请检查CDN或网络。建议使用腾讯云官方CDN：https://static.tcb.qq.com/sdk/latest/tcb.js，并确保页面通过HTTPS访问。');
-                    // 即使云服务加载失败，也继续初始化游戏
-                    document.dispatchEvent(new Event('tcb-ready'));
-                    return;
-                }
-                console.log('tcb version:', tcb.version || 'unknown');
-                console.log('ENV_ID:', ENV_ID);
-
-                app = tcb.init({ env: ENV_ID });
-                // 检查是否开启匿名登录
-                if (!app.auth().anonymousAuthProvider) {
-                    alert('云服务初始化失败：请在腾讯云控制台开启匿名登录功能。');
-                    // 即使云服务加载失败，也继续初始化游戏
-                    document.dispatchEvent(new Event('tcb-ready'));
-                    return;
-                }
-                await app.auth().anonymousAuthProvider().signIn();
-                console.log('匿名登录成功');
-                db = app.database();
-                document.dispatchEvent(new Event('tcb-ready'));
-            } catch (err) {
-                console.error('云开发匿名登录失败', err);
-                alert('云开发匿名登录失败，排行榜功能将不可用。错误详情：' + err.message);
-                // 即使云服务加载失败，也继续初始化游戏
-                document.dispatchEvent(new Event('tcb-ready'));
-            }
-        };
-    </script>
-
-    <script>
-        document.addEventListener('tcb-ready', () => {
+        document.addEventListener('DOMContentLoaded', () => {
             const gameArea = document.getElementById('game-area');
             const gridContainer = document.getElementById('grid-container');
             const tileContainer = document.getElementById('tile-container');
@@ -176,10 +126,17 @@
             const toggleLeaderboardButton = document.getElementById('toggle-leaderboard-button');
             const leaderboardContainer = document.getElementById('leaderboard-container');
 
-            gameOverOverlay.addEventListener('touchstart', e => { e.stopPropagation(); }, { passive: false });
-            gameOverOverlay.addEventListener('touchend', e => { e.stopPropagation(); }, { passive: false });
+            // 修复移动端点击游戏结束按钮无效的问题
+            gameOverOverlay.addEventListener('touchstart', e => {
+                e.stopPropagation();
+            }, { passive: false });
+
+            gameOverOverlay.addEventListener('touchend', e => {
+                e.stopPropagation();
+            }, { passive: false });
 
             const GRID_SIZE = 4;
+            const LEADERBOARD_KEY = '2048_leaderboard';
             let grid = [];
             let score = 0;
             let isAnimating = false;
@@ -207,13 +164,7 @@
             
             function init() {
                 setupGrid();
-                // 只有在db存在时才尝试加载排行榜
-                if (db) {
-                    loadLeaderboard();
-                } else {
-                    noScoresMessage.classList.remove('hidden');
-                    noScoresMessage.textContent = "排行榜功能未启用或加载失败。";
-                }
+                loadLeaderboard();
                 newGame();
                 updateScore(0);
             }
@@ -234,10 +185,8 @@
                 gameOverOverlay.classList.add('hidden');
                 gameOverOverlay.classList.remove('flex');
                 tileContainer.innerHTML = '';
-                cacheCellPositions();
                 addRandomTile();
                 addRandomTile();
-                if (db) loadLeaderboard();
             }
             
             function updateScore(newScore) {
@@ -297,7 +246,7 @@
                     await animateMoves(moves);
                     addRandomTile();
                     if (isGameOver()) {
-                        endGame();
+                        endGame(); // 游戏结束时调用新函数
                     }
                 }
                 
@@ -420,7 +369,6 @@
             }
 
             document.addEventListener('keydown', e => {
-                if (gameOverOverlay.classList.contains('flex')) return;
                 switch (e.key) {
                     case 'ArrowUp': e.preventDefault(); handleMove('up'); break;
                     case 'ArrowDown': e.preventDefault(); handleMove('down'); break;
@@ -432,7 +380,6 @@
             let touchStartX = 0; let touchStartY = 0; let touchEndX = 0; let touchEndY = 0;
             
             gameArea.addEventListener('touchstart', e => {
-                if (gameOverOverlay.classList.contains('flex')) return;
                 e.preventDefault();
                 touchStartX = e.changedTouches[0].clientX;
                 touchStartY = e.changedTouches[0].clientY;
@@ -441,7 +388,6 @@
             gameArea.addEventListener('touchmove', e => { e.preventDefault(); }, { passive: false });
 
             gameArea.addEventListener('touchend', e => {
-                if (gameOverOverlay.classList.contains('flex')) return;
                 e.preventDefault();
                 touchEndX = e.changedTouches[0].clientX;
                 touchEndY = e.changedTouches[0].clientY;
@@ -459,15 +405,13 @@
             newGameButton.addEventListener('click', newGame);
             tryAgainButton.addEventListener('click', newGame);
 
+            // 排行榜显示/隐藏按钮的监听器
             toggleLeaderboardButton.addEventListener('click', () => {
                 leaderboardContainer.classList.toggle('hidden');
                 if (leaderboardContainer.classList.contains('hidden')) {
                     toggleLeaderboardButton.textContent = '查看排行榜';
                 } else {
                     toggleLeaderboardButton.textContent = '隐藏排行榜';
-                    if (db) {
-                       loadLeaderboard();
-                    }
                 }
             });
 
@@ -481,26 +425,25 @@
                 }
             });
 
-            // --- 排行榜功能开始 (使用腾讯云云开发) ---
+            // --- 排行榜功能开始 ---
 
             function loadLeaderboard() {
-                if (!db) {
-                    noScoresMessage.classList.remove('hidden');
-                    noScoresMessage.textContent = "排行榜功能未启用或加载失败。";
-                    return;
+                try {
+                    const data = localStorage.getItem(LEADERBOARD_KEY);
+                    leaderboard = data ? JSON.parse(data) : [];
+                } catch (e) {
+                    console.error("无法从 localStorage 读取排行榜数据: ", e);
+                    leaderboard = [];
                 }
-                db.collection("scores").orderBy("score", "desc").limit(10).get()
-                    .then(res => {
-                        leaderboard = res.data;
-                        renderLeaderboard();
-                    })
-                    .catch(error => {
-                        console.error("加载排行榜失败: ", error);
-                        leaderboard = [];
-                        renderLeaderboard();
-                        noScoresMessage.classList.remove('hidden');
-                        noScoresMessage.textContent = "排行榜加载失败，请检查数据库权限和网络。";
-                    });
+                renderLeaderboard();
+            }
+
+            function saveLeaderboard() {
+                try {
+                    localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(leaderboard));
+                } catch (e) {
+                    console.error("无法保存排行榜数据到 localStorage: ", e);
+                }
             }
 
             function renderLeaderboard() {
@@ -516,7 +459,7 @@
                             <span class="font-bold text-lg">${index + 1}.</span>
                             <span class="flex-1 ml-4 truncate">${record.name}</span>
                             <span class="font-semibold text-lg">${record.score}</span>
-                            <span class="ml-4 text-sm text-gray-500 hidden sm:inline">${new Date(record.date).toLocaleString()}</span>
+                            <span class="ml-4 text-sm text-gray-500 hidden sm:inline">${record.date}</span>
                         `;
                         leaderboardList.appendChild(li);
                     });
@@ -524,9 +467,6 @@
             }
 
             function checkAndSaveScore() {
-                if (!db) {
-                    return; // 如果db未初始化，则静默失败，不影响游戏体验
-                }
                 if (score > 0 && (leaderboard.length < 10 || score > leaderboard[leaderboard.length - 1].score)) {
                     let playerName = prompt(`恭喜你获得新纪录！你的分数是 ${score}。请输入你的名字：`, "玩家");
                     if (playerName === null || playerName.trim() === "") {
@@ -536,18 +476,19 @@
                     const newRecord = {
                         score: score,
                         name: playerName.substring(0, 15),
-                        date: new Date().getTime() // 存储时间戳
+                        date: new Date().toLocaleString()
                     };
 
-                    db.collection("scores").add(newRecord)
-                        .then(() => {
-                            console.log("成绩上传成功!");
-                            loadLeaderboard();
-                        })
-                        .catch(error => {
-                            console.error("上传成绩失败: ", error);
-                            alert("上传成绩失败，请检查数据库权限和网络。");
-                        });
+                    leaderboard.push(newRecord);
+                    
+                    leaderboard.sort((a, b) => b.score - a.score);
+                    
+                    if (leaderboard.length > 10) {
+                        leaderboard = leaderboard.slice(0, 10);
+                    }
+
+                    saveLeaderboard();
+                    renderLeaderboard();
                 }
             }
 
@@ -563,4 +504,27 @@
         });
     </script>
 </body>
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyCIRI2D9937f3iwtCJXU6zabDMYT0R18dU",
+    authDomain: "game-2048-935e4.firebaseapp.com",
+    projectId: "game-2048-935e4",
+    storageBucket: "game-2048-935e4.firebasestorage.app",
+    messagingSenderId: "561986111957",
+    appId: "1:561986111957:web:129c25516ad68c2920d55c",
+    measurementId: "G-P0M1P2GZQF"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
 </html>

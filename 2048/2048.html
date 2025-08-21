@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2048 游戏</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            touch-action: none; /* 防止在移动设备上滚动页面 */
+        }
+        /* 为游戏容器添加微妙的背景图案 */
+        .game-body {
+            background-color: #faf8ef;
+            background-image:
+                linear-gradient(45deg, #f2efe8 25%, transparent 25%),
+                linear-gradient(-45deg, #f2efe8 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #f2efe8 75%),
+                linear-gradient(-45deg, transparent 75%, #f2efe8 75%);
+            background-size: 20px 20px;
+        }
+        /* 游戏网格和单元格的基础样式 */
+        .grid-container {
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            padding: 12px;
+            background-color: #bbada0;
+            border-radius: 8px;
+            position: relative;
+        }
+        .grid-cell {
+            background-color: rgba(238, 228, 218, 0.35);
+            border-radius: 5px;
+        }
+        /* 数字块的样式 */
+        .tile {
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: all 150ms ease-in-out; /* 核心动画：移动、合并、变色 */
+            z-index: 10;
+        }
+        /* 新出现的数字块动画 */
+        .tile-new {
+            animation: appear 200ms ease-in-out;
+        }
+        @keyframes appear {
+            from {
+                transform: scale(0);
+            }
+            to {
+                transform: scale(1);
+            }
+        }
+        /* 合并时的数字块动画 */
+        .tile-merged {
+            animation: pop 200ms ease-in-out;
+            z-index: 20; /* 确保合并的块在最上层 */
+        }
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        /* 不同数字的颜色 */
+        .tile[data-value="2"] { background-color: #eee4da; color: #776e65; }
+        .tile[data-value="4"] { background-color: #ede0c8; color: #776e65; }
+        .tile[data-value="8"] { background-color: #f2b179; color: #f9f6f2; }
+        .tile[data-value="16"] { background-color: #f59563; color: #f9f6f2; }
+        .tile[data-value="32"] { background-color: #f67c5f; color: #f9f6f2; }
+        .tile[data-value="64"] { background-color: #f65e3b; color: #f9f6f2; }
+        .tile[data-value="128"] { background-color: #edcf72; color: #f9f6f2; }
+        .tile[data-value="256"] { background-color: #edcc61; color: #f9f6f2; }
+        .tile[data-value="512"] { background-color: #edc850; color: #f9f6f2; }
+        .tile[data-value="1024"] { background-color: #edc53f; color: #f9f6f2; }
+        .tile[data-value="2048"] { background-color: #edc22e; color: #f9f6f2; }
+        .tile[data-value="4096"] { background-color: #3c3a32; color: #f9f6f2; }
+        .tile[data-value="8192"] { background-color: #3c3a32; color: #f9f6f2; }
+    </style>
+</head>
+<body class="game-body flex flex-col items-center justify-center min-h-screen p-4 text-gray-800">
+
+    <div class="w-full max-w-md mx-auto">
+        <header class="flex items-center justify-between mb-4">
+            <h1 class="text-5xl font-bold text-gray-700">2048</h1>
+            <div class="flex items-center space-x-2">
+                <div class="bg-gray-700 text-white p-2 px-4 rounded-lg text-center">
+                    <div class="text-xs uppercase font-bold tracking-wider">分数</div>
+                    <div id="score" class="text-2xl font-bold">0</div>
+                </div>
+                <button id="new-game-button" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200">
+                    新游戏
+                </button>
+            </div>
+        </header>
+
+        <main class="relative">
+            <div id="game-over-overlay" class="absolute inset-0 bg-white/70 flex-col items-center justify-center rounded-lg z-30 hidden">
+                <h2 class="text-4xl font-bold text-gray-700 mb-2">游戏结束!</h2>
+                <button id="try-again-button" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200">
+                    再试一次
+                </button>
+            </div>
+            <div id="grid-container" class="grid-container grid aspect-square w-full">
+                </div>
+            <div id="tile-container" class="absolute inset-0 p-[12px]">
+                </div>
+        </main>
+
+        <footer class="mt-4 text-center text-gray-500">
+            <p><strong>玩法:</strong> 使用<strong>方向键</strong>或<strong>滑动屏幕</strong>来移动数字块。当两个相同的数字块相遇时，它们会合并成一个新的数字块！</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const gridContainer = document.getElementById('grid-container');
+            const tileContainer = document.getElementById('tile-container');
+            const scoreElement = document.getElementById('score');
+            const gameOverOverlay = document.getElementById('game-over-overlay');
+            const newGameButton = document.getElementById('new-game-button');
+            const tryAgainButton = document.getElementById('try-again-button');
+
+            const GRID_SIZE = 4;
+            let grid = [];
+            let score = 0;
+            let isAnimating = false;
+
+            // 初始化游戏
+            function init() {
+                setupGrid();
+                newGame();
+                updateScore(0);
+            }
+
+            // 设置背景网格
+            function setupGrid() {
+                gridContainer.innerHTML = '';
+                for (let i = 0; i < GRID_SIZE * GRID_SIZE; i++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('grid-cell');
+                    gridContainer.appendChild(cell);
+                }
+            }
+
+            // 开始新游戏
+            function newGame() {
+                grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
+                updateScore(0);
+                gameOverOverlay.classList.add('hidden');
+                gameOverOverlay.classList.remove('flex');
+                tileContainer.innerHTML = '';
+                addRandomTile();
+                addRandomTile();
+            }
+
+            // 更新分数
+            function updateScore(newScore) {
+                score = newScore;
+                scoreElement.textContent = score;
+            }
+
+            // 在随机空位添加新数字
+            function addRandomTile() {
+                const emptyCells = [];
+                for (let r = 0; r < GRID_SIZE; r++) {
+                    for (let c = 0; c < GRID_SIZE; c++) {
+                        if (grid[r][c] === 0) {
+                            emptyCells.push({ r, c });
+                        }
+                    }
+                }
+
+                if (emptyCells.length > 0) {
+                    const { r, c } = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                    // 90%概率生成2，10%概率生成4
+                    const value = Math.random() < 0.9 ? 2 : 4;
+                    grid[r][c] = value;
+                    createTile(r, c, value, true);
+                }
+            }
+
+            // 创建数字块DOM元素
+            function createTile(row, col, value, isNew = false) {
+                const tile = document.createElement('div');
+                const tileSize = gridContainer.clientWidth / GRID_SIZE;
+                const gap = 12 / (GRID_SIZE -1) * (GRID_SIZE/4);
+
+                tile.classList.add('tile');
+                if (isNew) tile.classList.add('tile-new');
+                
+                tile.dataset.value = value;
+                tile.textContent = value;
+                
+                const size = (gridContainer.offsetWidth - 24) / 4;
+                
+                tile.style.width = `${size}px`;
+                tile.style.height = `${size}px`;
+                tile.style.top = `${row * (size + gap)}px`;
+                tile.style.left = `${col * (size + gap)}px`;
+                tile.style.fontSize = `${size * 0.4}px`;
+                if(value > 1000) tile.style.fontSize = `${size * 0.3}px`;
+
+
+                tileContainer.appendChild(tile);
+            }
+
+            // 移动和合并的核心逻辑
+            async function handleMove(direction) {
+                if (isAnimating) return;
+                isAnimating = true;
+
+                const { newGrid, scoreIncrease, moves } = processMove(direction);
+
+                if (JSON.stringify(grid) !== JSON.stringify(newGrid)) {
+                    grid = newGrid;
+                    updateScore(score + scoreIncrease);
+                    
+                    await animateMoves(moves);
+
+                    addRandomTile();
+
+                    if (isGameOver()) {
+                        gameOverOverlay.classList.remove('hidden');
+                        gameOverOverlay.classList.add('flex');
+                    }
+                }
+                
+                // 等待动画结束
+                setTimeout(() => {
+                    isAnimating = false;
+                }, 150);
+            }
+            
+            // 处理移动逻辑并返回新网格、分数增加和移动信息
+            function processMove(direction) {
+                let scoreIncrease = 0;
+                let newGrid = JSON.parse(JSON.stringify(grid)); // 深拷贝
+                let moves = [];
+                
+                const isVertical = direction === 'up' || direction === 'down';
+                const isReverse = direction === 'right' || direction === 'down';
+
+                for (let i = 0; i < GRID_SIZE; i++) {
+                    let line = [];
+                    for(let j = 0; j < GRID_SIZE; j++) {
+                        line.push(isVertical ? newGrid[j][i] : newGrid[i][j]);
+                    }
+
+                    const { newLine, lineScore, lineMoves } = processLine(line, isReverse);
+                    scoreIncrease += lineScore;
+
+                    for(let j = 0; j < GRID_SIZE; j++) {
+                        if (isVertical) {
+                            newGrid[j][i] = newLine[j];
+                        } else {
+                            newGrid[i][j] = newLine[j];
+                        }
+                    }
+                    
+                    // 转换移动坐标
+                    lineMoves.forEach(move => {
+                        moves.push({
+                            from: isVertical ? { r: move.from, c: i } : { r: i, c: move.from },
+                            to: isVertical ? { r: move.to, c: i } : { r: i, c: move.to },
+                            value: move.value,
+                            isMerge: move.isMerge
+                        });
+                    });
+                }
+                return { newGrid, scoreIncrease, moves };
+            }
+
+            // 处理单行/列的合并与移动
+            function processLine(line, isReverse) {
+                if (isReverse) line.reverse();
+
+                let filteredLine = line.filter(v => v !== 0);
+                let newLine = [];
+                let lineScore = 0;
+                let lineMoves = [];
+                let originalIndices = [];
+                line.forEach((val, index) => {
+                    if (val !== 0) originalIndices.push(index);
+                });
+
+                for (let i = 0; i < filteredLine.length; i++) {
+                    if (i + 1 < filteredLine.length && filteredLine[i] === filteredLine[i + 1]) {
+                        const mergedValue = filteredLine[i] * 2;
+                        newLine.push(mergedValue);
+                        lineScore += mergedValue;
+                        
+                        // 记录合并移动
+                        const toIndex = newLine.length - 1;
+                        lineMoves.push({ from: originalIndices[i], to: toIndex, value: filteredLine[i], isMerge: false });
+                        lineMoves.push({ from: originalIndices[i+1], to: toIndex, value: filteredLine[i+1], isMerge: true });
+                        
+                        i++; // 跳过下一个已经合并的块
+                    } else {
+                        newLine.push(filteredLine[i]);
+                        // 记录普通移动
+                        const toIndex = newLine.length - 1;
+                        lineMoves.push({ from: originalIndices[i], to: toIndex, value: filteredLine[i], isMerge: false });
+                    }
+                }
+                
+                // 补0
+                while (newLine.length < GRID_SIZE) {
+                    newLine.push(0);
+                }
+                
+                if (isReverse) {
+                    newLine.reverse();
+                    lineMoves.forEach(move => {
+                        move.from = GRID_SIZE - 1 - move.from;
+                        move.to = GRID_SIZE - 1 - move.to;
+                    });
+                }
+
+                return { newLine, lineScore, lineMoves };
+            }
+
+            // 执行移动动画
+            function animateMoves(moves) {
+                return new Promise(resolve => {
+                    const size = (gridContainer.offsetWidth - 24) / 4;
+                    const gap = 12 / (GRID_SIZE -1) * (GRID_SIZE/4);
+                    
+                    const movingTiles = [];
+
+                    moves.forEach(move => {
+                        const tile = findTile(move.from.r, move.from.c);
+                        if (tile) {
+                            tile.style.top = `${move.to.r * (size + gap)}px`;
+                            tile.style.left = `${move.to.c * (size + gap)}px`;
+                            tile.dataset.isMoving = true;
+                            movingTiles.push({tile, move});
+                        }
+                    });
+
+                    setTimeout(() => {
+                        movingTiles.forEach(({tile, move}) => {
+                           if (move.isMerge) {
+                                tile.remove();
+                            } else {
+                                delete tile.dataset.isMoving;
+                            }
+                        });
+                        
+                        // 更新合并后的块
+                        const mergedTiles = moves.filter(m => m.isMerge);
+                        mergedTiles.forEach(move => {
+                            const targetTile = findTile(move.to.r, move.to.c, true);
+                            if (targetTile) {
+                                const newValue = move.value * 2;
+                                targetTile.dataset.value = newValue;
+                                targetTile.textContent = newValue;
+                                targetTile.classList.add('tile-merged');
+                                targetTile.style.fontSize = `${size * 0.4}px`;
+                                if(newValue > 1000) targetTile.style.fontSize = `${size * 0.3}px`;
+
+                                targetTile.addEventListener('animationend', () => {
+                                    targetTile.classList.remove('tile-merged');
+                                }, { once: true });
+                            }
+                        });
+                        resolve();
+                    }, 150);
+                });
+            }
+
+            // 查找特定位置的数字块
+            function findTile(r, c, ignoreMoving = false) {
+                const size = (gridContainer.offsetWidth - 24) / 4;
+                const gap = 12 / (GRID_SIZE -1) * (GRID_SIZE/4);
+                const top = r * (size + gap);
+                const left = c * (size + gap);
+                
+                for (const tile of tileContainer.children) {
+                    if (Math.abs(parseFloat(tile.style.top) - top) < 1 && 
+                        Math.abs(parseFloat(tile.style.left) - left) < 1) {
+                        if (ignoreMoving || !tile.dataset.isMoving) {
+                            return tile;
+                        }
+                    }
+                }
+                return null;
+            }
+
+
+            // 检查游戏是否结束
+            function isGameOver() {
+                // 检查是否有空位
+                for (let r = 0; r < GRID_SIZE; r++) {
+                    for (let c = 0; c < GRID_SIZE; c++) {
+                        if (grid[r][c] === 0) return false;
+                    }
+                }
+                // 检查是否有可合并的块
+                for (let r = 0; r < GRID_SIZE; r++) {
+                    for (let c = 0; c < GRID_SIZE; c++) {
+                        if (c < GRID_SIZE - 1 && grid[r][c] === grid[r][c + 1]) return false;
+                        if (r < GRID_SIZE - 1 && grid[r][c] === grid[r + 1][c]) return false;
+                    }
+                }
+                return true;
+            }
+
+            // 键盘事件监听
+            document.addEventListener('keydown', e => {
+                switch (e.key) {
+                    case 'ArrowUp': handleMove('up'); break;
+                    case 'ArrowDown': handleMove('down'); break;
+                    case 'ArrowLeft': handleMove('left'); break;
+                    case 'ArrowRight': handleMove('right'); break;
+                }
+            });
+
+            // 触摸事件监听 (滑动)
+            let touchStartX = 0;
+            let touchStartY = 0;
+            let touchEndX = 0;
+            let touchEndY = 0;
+
+            gridContainer.addEventListener('touchstart', e => {
+                // 阻止浏览器的默认滚动行为
+                e.preventDefault();
+                touchStartX = e.changedTouches[0].screenX;
+                touchStartY = e.changedTouches[0].screenY;
+            }, { passive: false }); // 明确告知浏览器我们会阻止默认行为
+
+            // 添加 touchmove 监听器以在滑动过程中持续阻止滚动
+            gridContainer.addEventListener('touchmove', e => {
+                e.preventDefault();
+            }, { passive: false });
+
+            gridContainer.addEventListener('touchend', e => {
+                // touchend 中也可以阻止默认行为，以保持一致性
+                e.preventDefault(); 
+                touchEndX = e.changedTouches[0].screenX;
+                touchEndY = e.changedTouches[0].screenY;
+                handleSwipe();
+            });
+
+            function handleSwipe() {
+                const dx = touchEndX - touchStartX;
+                const dy = touchEndY - touchStartY;
+                const absDx = Math.abs(dx);
+                const absDy = Math.abs(dy);
+
+                if (Math.max(absDx, absDy) > 50) { // 最小滑动距离
+                    if (absDx > absDy) {
+                        handleMove(dx > 0 ? 'right' : 'left');
+                    } else {
+                        handleMove(dy > 0 ? 'down' : 'up');
+                    }
+                }
+            }
+            
+            // 按钮事件
+            newGameButton.addEventListener('click', newGame);
+            tryAgainButton.addEventListener('click', newGame);
+
+            // 窗口大小变化时重新渲染
+            window.addEventListener('resize', () => {
+                tileContainer.innerHTML = '';
+                for(let r=0; r<GRID_SIZE; r++) {
+                    for(let c=0; c<GRID_SIZE; c++) {
+                        if (grid[r][c] !== 0) {
+                            createTile(r, c, grid[r][c]);
+                        }
+                    }
+                }
+            });
+
+            init();
+        });
+    </script>
+</body>
+</html>

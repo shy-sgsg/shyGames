@@ -1,25 +1,36 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc, query, orderBy, getDocs } from "firebase/firestore";
+// 由于现在从 CDN 加载 Firebase，不再需要 import 语句
+// import { initializeApp } from "firebase/app";
+// import { getFirestore, collection, addDoc, query, orderBy, getDocs } from "firebase/firestore";
 
 // Firebase 配置信息 (请替换成你自己的)
 const firebaseConfig = {
     apiKey: "AIzaSyCIRI2D9937f3iwtCJXU6zabDMYT0R18dU",
     authDomain: "game-2048-935e4.firebaseapp.com",
     projectId: "game-2048-935e4",
-    storageBucket: "game-2048-935e4.appspot.com", // 修正拼写错误
+    storageBucket: "game-2048-935e4.appspot.com",
     messagingSenderId: "561986111957",
     appId: "1:561986111957:web:129c25516ad68c2920d55c"
 };
 
-// 初始化 Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const leaderboardCollection = collection(db, "leaderboard");
+let db = null;
+let leaderboardCollection = null;
+let isOfflineMode = false;
+
+// 尝试初始化 Firebase，如果失败则进入离线模式
+try {
+    // 使用全局可用的 firebase 变量
+    const app = firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    leaderboardCollection = db.collection("leaderboard");
+    console.log("Firebase 数据库已成功连接。");
+} catch (e) {
+    console.error("Firebase 数据库连接失败，游戏将进入离线模式。", e);
+    isOfflineMode = true;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const gameBoard = document.getElementById('game-board');
     const newGameBtn = document.getElementById('new-game-btn');
-    const solveBtn = document.getElementById('solve-btn');
     const movesCountSpan = document.getElementById('moves-count');
     const timerSpan = document.getElementById('timer');
     const winModal = document.getElementById('win-modal');
@@ -37,6 +48,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let timerInterval = null;
     let startTime = 0;
     let isAnimating = false;
+
+    // 如果处于离线模式，隐藏排行榜按钮
+    if (isOfflineMode) {
+        leaderboardBtn.style.display = 'none';
+    }
 
     // 初始化游戏
     function initGame() {
@@ -137,7 +153,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (isSolved()) {
                     showWinModal();
                     clearInterval(timerInterval);
-                    saveToLeaderboard();
+                    if (!isOfflineMode) { // 只在在线模式下保存记录
+                        saveToLeaderboard();
+                    }
                 }
             }, 250);
         }
@@ -214,7 +232,8 @@ document.addEventListener('DOMContentLoaded', () => {
     async function saveToLeaderboard() {
         try {
             const timeInSeconds = Math.floor((Date.now() - startTime) / 1000);
-            const docRef = await addDoc(leaderboardCollection, {
+            // 使用 firestore() 和 collection() 的全局方法
+            const docRef = await db.collection("leaderboard").add({
                 moves: moves,
                 time: timeInSeconds,
                 date: new Date()
@@ -227,13 +246,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 从 Firestore 获取并显示排行榜
     async function showLeaderboard() {
+        if (isOfflineMode) {
+            alert("当前处于离线模式，无法加载排行榜。");
+            return;
+        }
+
         leaderboardList.innerHTML = '<li>加载中...</li>';
         leaderboardModal.style.display = 'flex';
         
         try {
-            // 查询 Firestore，先按步数升序排列，步数相同时按时间升序排列
-            const q = query(leaderboardCollection, orderBy("moves"), orderBy("time"));
-            const querySnapshot = await getDocs(q);
+            // 使用 firestore() 和 collection() 的全局方法
+            const leaderboardRef = db.collection("leaderboard");
+            const q = leaderboardRef.orderBy("moves").orderBy("time");
+            const querySnapshot = await q.get();
             
             leaderboardList.innerHTML = '';
             let rank = 1;
@@ -263,63 +288,6 @@ document.addEventListener('DOMContentLoaded', () => {
     leaderboardBtn.addEventListener('click', showLeaderboard);
     closeLeaderboardModalBtn.addEventListener('click', () => {
         leaderboardModal.style.display = 'none';
-    });
-
-    // 自动求解功能 (简化版)
-    solveBtn.addEventListener('click', () => {
-        if (timerInterval) {
-            clearInterval(timerInterval);
-        }
-        const manhattanDistance = (state) => {
-            let distance = 0;
-            for (let i = 0; i < state.length; i++) {
-                if (state[i] !== 0) {
-                    const targetIndex = state[i] - 1;
-                    const currentRow = Math.floor(i / gridSize);
-                    const currentCol = i % gridSize;
-                    const targetRow = Math.floor(targetIndex / gridSize);
-                    const targetCol = targetIndex % gridSize;
-                    distance += Math.abs(currentRow - targetRow) + Math.abs(currentCol - targetCol);
-                }
-            }
-            return distance;
-        };
-        const runSolver = () => {
-            if (isSolved() || isAnimating) {
-                return;
-            }
-            const currentState = [...tiles];
-            const emptyIndex = currentState.indexOf(0);
-            const directions = [-1, 1, -gridSize, gridSize];
-            let nextMove = -1;
-            let bestHeuristic = Infinity;
-            for(let i = 0; i < directions.length; i++) {
-                const tileIndex = emptyIndex + directions[i];
-                if (tileIndex >= 0 && tileIndex < 16) {
-                    const tempTiles = [...currentState];
-                    [tempTiles[tileIndex], tempTiles[emptyIndex]] = [tempTiles[emptyIndex], tempTiles[tileIndex]];
-                    const heuristic = manhattanDistance(tempTiles);
-                    if (heuristic < bestHeuristic) {
-                        bestHeuristic = heuristic;
-                        nextMove = tileIndex;
-                    }
-                }
-            }
-            if (nextMove !== -1) {
-                const numberToMove = tiles[nextMove];
-                const tileToMove = gameBoard.querySelector(`[data-number="${numberToMove}"]`);
-                if (tileToMove) {
-                     tileToMove.click(); 
-                }
-                if (!isSolved()) {
-                    setTimeout(runSolver, 200);
-                }
-            } else {
-                console.log("自动求解完成或无法找到最优解");
-            }
-        };
-        alert('自动求解功能正在启动，请勿操作！');
-        runSolver();
     });
 
     initGame();
