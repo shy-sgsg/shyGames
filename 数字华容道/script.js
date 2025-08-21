@@ -88,6 +88,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // 初始创建方块
     function createTiles() {
         gameBoard.innerHTML = '';
+        // 检测棋盘宽度，动态计算 tile 大小和偏移
+        const boardRect = gameBoard.getBoundingClientRect();
+        const tileSize = boardRect.width / gridSize;
         tiles.forEach((number, index) => {
             const tile = document.createElement('div');
             tile.classList.add('tile');
@@ -98,12 +101,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 tile.dataset.number = number;
                 tile.addEventListener('click', handleTileClick);
             }
-            // 绝对定位每个方块
             const row = Math.floor(index / gridSize);
             const col = index % gridSize;
-            tile.style.left = `${col * 110}px`;
-            tile.style.top = `${row * 110}px`;
-            // 初始动画
+            tile.style.width = `${tileSize}px`;
+            tile.style.height = `${tileSize}px`;
+            tile.style.left = `${col * tileSize}px`;
+            tile.style.top = `${row * tileSize}px`;
+            tile.style.lineHeight = `${tileSize}px`;
+            tile.style.fontSize = `${Math.max(tileSize * 0.4, 18)}px`;
             tile.style.transition = 'transform 0.25s cubic-bezier(.4,2,.3,1), left 0.25s, top 0.25s';
             tile.style.transform = 'scale(0.8)';
             setTimeout(() => {
@@ -115,16 +120,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 更新方块的CSS位置
     function updateTilesPosition() {
+        const boardRect = gameBoard.getBoundingClientRect();
+        const tileSize = boardRect.width / gridSize;
         const allTiles = gameBoard.querySelectorAll('.tile');
         allTiles.forEach(tileElement => {
             const number = tileElement.dataset.number ? parseInt(tileElement.dataset.number) : 0;
             const newIndex = tiles.indexOf(number);
             const row = Math.floor(newIndex / gridSize);
             const col = newIndex % gridSize;
-            // 增加滑动动画
+            tileElement.style.width = `${tileSize}px`;
+            tileElement.style.height = `${tileSize}px`;
+            tileElement.style.left = `${col * tileSize}px`;
+            tileElement.style.top = `${row * tileSize}px`;
+            tileElement.style.lineHeight = `${tileSize}px`;
+            tileElement.style.fontSize = `${Math.max(tileSize * 0.4, 18)}px`;
             tileElement.style.transition = 'transform 0.25s cubic-bezier(.4,2,.3,1), left 0.25s, top 0.25s';
-            tileElement.style.left = `${col * 110}px`;
-            tileElement.style.top = `${row * 110}px`;
             tileElement.style.transform = 'scale(1.08)';
             setTimeout(() => {
                 tileElement.style.transform = 'scale(1)';
@@ -309,4 +319,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     initGame();
+});
+
+window.addEventListener('resize', () => {
+    updateTilesPosition();
 });
