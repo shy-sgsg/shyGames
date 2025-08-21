@@ -90,8 +90,9 @@ document.addEventListener('DOMContentLoaded', () => {
         gameBoard.innerHTML = '';
         // 检测棋盘宽度，动态计算 tile 大小和偏移
         const boardRect = gameBoard.getBoundingClientRect();
-        // 留出间隙，避免方块挤在一起
-        const gap = 8; // px
+        // gap 动态调整，手机端更小
+        const isMobile = window.innerWidth <= 480;
+        const gap = isMobile ? 4 : 8; // px
         const tileSize = (boardRect.width - gap * (gridSize - 1)) / gridSize;
         tiles.forEach((number, index) => {
             const tile = document.createElement('div');
@@ -110,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tile.style.left = `${col * (tileSize + gap)}px`;
             tile.style.top = `${row * (tileSize + gap)}px`;
             tile.style.lineHeight = `${tileSize}px`;
-            tile.style.fontSize = `${Math.max(tileSize * 0.4, 18)}px`;
+            tile.style.fontSize = `${Math.max(tileSize * 0.38, 16)}px`;
             tile.style.transition = 'transform 0.25s cubic-bezier(.4,2,.3,1), left 0.25s, top 0.25s';
             tile.style.transform = 'scale(0.8)';
             setTimeout(() => {
@@ -123,7 +124,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // 更新方块的CSS位置
     function updateTilesPosition() {
         const boardRect = gameBoard.getBoundingClientRect();
-        const gap = 8; // px
+        const isMobile = window.innerWidth <= 480;
+        const gap = isMobile ? 4 : 8; // px
         const tileSize = (boardRect.width - gap * (gridSize - 1)) / gridSize;
         const allTiles = gameBoard.querySelectorAll('.tile');
         allTiles.forEach(tileElement => {
@@ -136,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tileElement.style.left = `${col * (tileSize + gap)}px`;
             tileElement.style.top = `${row * (tileSize + gap)}px`;
             tileElement.style.lineHeight = `${tileSize}px`;
-            tileElement.style.fontSize = `${Math.max(tileSize * 0.4, 18)}px`;
+            tileElement.style.fontSize = `${Math.max(tileSize * 0.38, 16)}px`;
             tileElement.style.transition = 'transform 0.25s cubic-bezier(.4,2,.3,1), left 0.25s, top 0.25s';
             tileElement.style.transform = 'scale(1.08)';
             setTimeout(() => {
