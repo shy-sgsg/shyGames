@@ -1,6 +1,4 @@
 // 由于现在从 CDN 加载 Firebase，不再需要 import 语句
-// import { initializeApp } from "firebase/app";
-// import { getFirestore, collection, addDoc, query, orderBy, getDocs } from "firebase/firestore";
 
 // Firebase 配置信息 (请替换成你自己的)
 const firebaseConfig = {
@@ -21,7 +19,8 @@ try {
     // 使用全局可用的 firebase 变量
     const app = firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
-    leaderboardCollection = db.collection("leaderboard");
+    // 使用独立的排行榜集合，避免与2048游戏冲突
+    leaderboardCollection = db.collection("fifteen_puzzle_leaderboard");
     console.log("Firebase 数据库已成功连接。");
 } catch (e) {
     console.error("Firebase 数据库连接失败，游戏将进入离线模式。", e);
@@ -32,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameBoard = document.getElementById('game-board');
     const newGameBtn = document.getElementById('new-game-btn');
     const movesCountSpan = document.getElementById('moves-count');
-    const timerSpan = document.getElementById('timer');
+    const timerSpan = document = document.getElementById('timer');
     const winModal = document.getElementById('win-modal');
     const closeModalBtn = document.getElementById('close-modal-btn');
     const finalMovesSpan = document.getElementById('final-moves');
@@ -41,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const leaderboardModal = document.getElementById('leaderboard-modal');
     const leaderboardList = document.getElementById('leaderboard-list');
     const closeLeaderboardModalBtn = document.getElementById('close-leaderboard-modal-btn');
+    const backToLobbyBtn = document.getElementById('back-to-lobby-btn');
 
     let tiles = [];
     const gridSize = 4;
@@ -232,11 +232,17 @@ document.addEventListener('DOMContentLoaded', () => {
     async function saveToLeaderboard() {
         try {
             const timeInSeconds = Math.floor((Date.now() - startTime) / 1000);
-            // 使用 firestore() 和 collection() 的全局方法
-            const docRef = await db.collection("leaderboard").add({
+            let playerName = prompt("恭喜通关！请输入您的名字：", "玩家");
+            if (playerName === null || playerName.trim() === "") {
+                playerName = "匿名玩家";
+            }
+            const now = new Date();
+            const dateStr = now.toLocaleString();
+            const docRef = await leaderboardCollection.add({
                 moves: moves,
                 time: timeInSeconds,
-                date: new Date()
+                name: playerName.substring(0, 15),
+                date: dateStr
             });
             console.log("记录已添加到排行榜，ID: ", docRef.id);
         } catch (e) {
@@ -253,13 +259,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         leaderboardList.innerHTML = '<li>加载中...</li>';
         leaderboardModal.style.display = 'flex';
-        
+
         try {
-            // 使用 firestore() 和 collection() 的全局方法
-            const leaderboardRef = db.collection("leaderboard");
-            const q = leaderboardRef.orderBy("moves").orderBy("time");
+            // 只按 time 升序排序
+            const q = leaderboardCollection.orderBy("time").limit(20);
             const querySnapshot = await q.get();
-            
+
             leaderboardList.innerHTML = '';
             let rank = 1;
             querySnapshot.forEach((doc) => {
@@ -267,18 +272,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 const minutes = Math.floor(data.time / 60);
                 const seconds = data.time % 60;
                 const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                
+
                 const li = document.createElement('li');
                 li.innerHTML = `
                     <span class="rank-number">${rank}.</span>
-                    <span class="rank-data">步数: ${data.moves}, 用时: ${formattedTime}</span>
+                    <span class="rank-data">玩家: ${data.name || "匿名"} 步数: ${data.moves}, 用时: ${formattedTime}, 时间: ${data.date || ""}</span>
                 `;
                 leaderboardList.appendChild(li);
                 rank++;
             });
         } catch (e) {
             console.error("获取排行榜失败: ", e);
-            leaderboardList.innerHTML = '<li>加载排行榜失败，请稍后重试。</li>';
+            leaderboardList.innerHTML = `<li>加载排行榜失败，请稍后重试。<br>错误：${e.message}</li>`;
         }
     }
 
@@ -288,6 +293,9 @@ document.addEventListener('DOMContentLoaded', () => {
     leaderboardBtn.addEventListener('click', showLeaderboard);
     closeLeaderboardModalBtn.addEventListener('click', () => {
         leaderboardModal.style.display = 'none';
+    });
+    backToLobbyBtn.addEventListener('click', () => {
+        window.location.href = '../index.html';
     });
 
     initGame();
