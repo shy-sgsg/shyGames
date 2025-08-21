@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>15数字滑块游戏</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>15数字滑块游戏</h1>
+        <div class="info-bar">
+            <span>步数: <span id="moves-count">0</span></span>
+            <span>时间: <span id="timer">00:00</span></span>
+        </div>
+        <div class="game-board-container">
+            <div id="game-board"></div>
+        </div>
+        <div class="controls">
+            <button id="new-game-btn">新游戏</button>
+            <button id="solve-btn">自动求解</button>
+            <button id="leaderboard-btn">排行榜</button>
+        </div>
+    </div>
+
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2>恭喜！你赢了！</h2>
+            <p>总步数: <span id="final-moves"></span></p>
+            <p>总用时: <span id="final-time"></span></p>
+            <button id="close-modal-btn">再来一局</button>
+        </div>
+    </div>
+    
+    <div id="leaderboard-modal" class="modal">
+        <div class="modal-content">
+            <h2>排行榜</h2>
+            <ol id="leaderboard-list"></ol>
+            <button id="close-leaderboard-modal-btn">关闭</button>
+        </div>
+    </div>
+    
+    <script type="module" src="script.js"></script>
+</body>
+</html>
