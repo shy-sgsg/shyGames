@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const gameBoard = document.getElementById('game-board');
     const newGameBtn = document.getElementById('new-game-btn');
     const movesCountSpan = document.getElementById('moves-count');
-    const timerSpan = document = document.getElementById('timer');
+    const timerSpan = document.getElementById('timer');
     const winModal = document.getElementById('win-modal');
     const closeModalBtn = document.getElementById('close-modal-btn');
     const finalMovesSpan = document.getElementById('final-moves');
@@ -82,13 +82,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 solvable = true;
             }
         }
-        createTiles();
+        createAndPositionTiles();
     }
 
-    // 初始创建方块
-    function createTiles() {
+    // 获取尺寸和位置信息，避免重复计算
+    function getBoardMetrics() {
+        const boardStyle = window.getComputedStyle(gameBoard);
+        const paddingLeft = parseInt(boardStyle.paddingLeft);
+        const paddingTop = parseInt(boardStyle.paddingTop);
+        const boardContentSize = gameBoard.offsetWidth - paddingLeft - parseInt(boardStyle.paddingRight);
+        const gap = 8;
+        const tileSize = (boardContentSize - gap * (gridSize - 1)) / gridSize;
+        return { paddingLeft, paddingTop, tileSize, gap };
+    }
+
+    // 创建并设置方块位置
+    function createAndPositionTiles() {
         gameBoard.innerHTML = '';
-        tiles.forEach(number => {
+        const { paddingLeft, paddingTop, tileSize, gap } = getBoardMetrics();
+
+        tiles.forEach((number, index) => {
             const tile = document.createElement('div');
             tile.classList.add('tile');
             if (number === 0) {
@@ -98,22 +111,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 tile.dataset.number = number;
                 tile.addEventListener('click', handleTileClick);
             }
+            const row = Math.floor(index / gridSize);
+            const col = index % gridSize;
+            
+            tile.style.width = `${tileSize}px`;
+            tile.style.height = `${tileSize}px`;
+            // 调整 left 和 top 的计算，加上 padding
+            tile.style.left = `${col * (tileSize + gap) + paddingLeft}px`;
+            tile.style.top = `${row * (tileSize + gap) + paddingTop}px`;
+            tile.style.lineHeight = `${tileSize}px`;
+            tile.style.fontSize = `${Math.max(Math.min(tileSize * 0.4, 32), 16)}px`;
+
             gameBoard.appendChild(tile);
         });
-        updateTileFontSizes();
     }
-    
-    // 更新方块的字体大小以适应尺寸
-    function updateTileFontSizes() {
-        const firstTile = gameBoard.querySelector('.tile');
-        if (firstTile) {
-            const tileSize = firstTile.offsetWidth;
-            const fontSize = Math.max(Math.min(tileSize * 0.42, 32), 16);
-            gameBoard.querySelectorAll('.tile').forEach(tile => {
-                tile.style.fontSize = `${fontSize}px`;
-                tile.style.lineHeight = `${tileSize}px`;
-            });
-        }
+
+    // 更新方块的CSS位置
+    function updateTilesPosition() {
+        const { paddingLeft, paddingTop, tileSize, gap } = getBoardMetrics();
+        const allTiles = gameBoard.querySelectorAll('.tile');
+
+        allTiles.forEach(tileElement => {
+            const number = tileElement.dataset.number ? parseInt(tileElement.dataset.number) : 0;
+            const newIndex = tiles.indexOf(number);
+            const row = Math.floor(newIndex / gridSize);
+            const col = newIndex % gridSize;
+
+            tileElement.style.left = `${col * (tileSize + gap) + paddingLeft}px`;
+            tileElement.style.top = `${row * (tileSize + gap) + paddingTop}px`;
+        });
     }
 
     // 处理方块点击事件
@@ -137,7 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
             isAnimating = true;
             swapTiles(tileIndex, emptyIndex);
             
-            updateTilePositions(); // 只需要交换方块在 DOM 中的位置
+            updateTilesPosition();
             
             setTimeout(() => {
                 isAnimating = false;
@@ -153,17 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }, 250);
         }
-    }
-
-    // 只需要更新 DOM 中方块的顺序，CSS Grid 会自动重新布局
-    function updateTilePositions() {
-        const children = Array.from(gameBoard.children);
-        tiles.forEach((number, index) => {
-            const tile = children.find(child => parseInt(child.dataset.number) === number || (number === 0 && child.classList.contains('empty-tile')));
-            if (tile && gameBoard.children[index] !== tile) {
-                gameBoard.insertBefore(tile, gameBoard.children[index]);
-            }
-        });
     }
 
     // 判断方块是否可以移动
@@ -301,11 +316,11 @@ document.addEventListener('DOMContentLoaded', () => {
     backToLobbyBtn.addEventListener('click', () => {
         window.location.href = '../index.html';
     });
-    
+
     initGame();
 });
 
-// 在窗口大小改变时，重新计算字体大小
 window.addEventListener('resize', () => {
-    updateTileFontSizes();
+    // 窗口大小改变时，重新创建和定位所有方块
+    createAndPositionTiles();
 });
