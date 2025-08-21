@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 初始创建方块
     function createTiles() {
         gameBoard.innerHTML = '';
-        tiles.forEach(number => {
+        tiles.forEach((number, index) => {
             const tile = document.createElement('div');
             tile.classList.add('tile');
             if (number === 0) {
@@ -98,12 +98,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 tile.dataset.number = number;
                 tile.addEventListener('click', handleTileClick);
             }
-
-            const index = tiles.indexOf(number);
+            // 绝对定位每个方块
             const row = Math.floor(index / gridSize);
             const col = index % gridSize;
-            tile.style.transform = `translate(${col * 110}px, ${row * 110}px)`;
-
+            tile.style.left = `${col * 110}px`;
+            tile.style.top = `${row * 110}px`;
+            // 初始动画
+            tile.style.transition = 'transform 0.25s cubic-bezier(.4,2,.3,1), left 0.25s, top 0.25s';
+            tile.style.transform = 'scale(0.8)';
+            setTimeout(() => {
+                tile.style.transform = 'scale(1)';
+            }, 10);
             gameBoard.appendChild(tile);
         });
     }
@@ -111,14 +116,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // 更新方块的CSS位置
     function updateTilesPosition() {
         const allTiles = gameBoard.querySelectorAll('.tile');
-        
         allTiles.forEach(tileElement => {
             const number = tileElement.dataset.number ? parseInt(tileElement.dataset.number) : 0;
             const newIndex = tiles.indexOf(number);
-
             const row = Math.floor(newIndex / gridSize);
             const col = newIndex % gridSize;
-            tileElement.style.transform = `translate(${col * 110}px, ${row * 110}px)`;
+            // 增加滑动动画
+            tileElement.style.transition = 'transform 0.25s cubic-bezier(.4,2,.3,1), left 0.25s, top 0.25s';
+            tileElement.style.left = `${col * 110}px`;
+            tileElement.style.top = `${row * 110}px`;
+            tileElement.style.transform = 'scale(1.08)';
+            setTimeout(() => {
+                tileElement.style.transform = 'scale(1)';
+            }, 180);
         });
     }
 

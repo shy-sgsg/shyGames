@@ -53,8 +53,8 @@ h1 {
 .tile {
     width: 100px;
     height: 100px;
-    background-color: #009688; /* 核心方块颜色 */
-    color: #ffffff;
+    background-color: #009688; /* 绿色方块 */
+    color: #ffffff;            /* 白色数字 */
     border-radius: 8px;
     display: flex;
     justify-content: center;
