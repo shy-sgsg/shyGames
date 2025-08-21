@@ -85,10 +85,19 @@ document.addEventListener('DOMContentLoaded', () => {
         createTiles();
     }
 
+    function setBoardContainerSize() {
+        // 设置棋盘容器和背景的最大宽度
+        const container = gameBoard.parentElement;
+        const maxBoardSize = Math.min(container.offsetWidth * 0.9, 360);
+        container.style.width = `${maxBoardSize}px`;
+        container.style.height = `${maxBoardSize}px`;
+        container.style.margin = "0 auto";
+    }
+
     // 初始创建方块
     function createTiles() {
+        setBoardContainerSize();
         gameBoard.innerHTML = '';
-        // 棋盘最大宽度为360px，移动端和桌面都居中且不占满全屏
         const gridSize = 4;
         const boardMaxWidth = Math.min(gameBoard.parentElement.offsetWidth * 0.9, 360);
         gameBoard.style.width = `${boardMaxWidth}px`;
@@ -125,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 更新方块的CSS位置
     function updateTilesPosition() {
+        setBoardContainerSize();
         const gridSize = 4;
         const boardMaxWidth = Math.min(gameBoard.parentElement.offsetWidth * 0.9, 360);
         gameBoard.style.width = `${boardMaxWidth}px`;
