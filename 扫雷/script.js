@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let timerInterval;
     let startTime;
     let isFirstClick = true;
-
+    let isSubmitting = false; // 新增：防重复提交标志
 
     // 4. 核心游戏函数
     function initGame() {
@@ -273,25 +273,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function submitScore() {
+        if (isSubmitting) { // 检查是否正在提交
+            console.log("正在提交，请勿重复操作。");
+            return;
+        }
+
         const playerName = playerNameInput.value.trim();
-        if (playerName) {
-            const finalTime = parseFloat(timerElement.textContent.replace('时间: ', ''));
-            try {
-                await leaderboardCollection.add({
-                    name: playerName,
-                    time: finalTime,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                alert("你的成绩已记录到排行榜！");
-            } catch (error) {
-                console.error("上传成绩失败: ", error);
-                alert("上传成绩失败，请检查网络或控制台。");
-            }
-        } else {
+        if (!playerName) {
             alert("请输入你的名字！");
             return;
         }
-        hideNameModal();
+
+        isSubmitting = true; // 设置标志为 true，表示提交开始
+        submitNameBtn.disabled = true; // 禁用提交按钮
+
+        const finalTime = parseFloat(timerElement.textContent.replace('时间: ', ''));
+        try {
+            await leaderboardCollection.add({
+                name: playerName,
+                time: finalTime,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            alert("你的成绩已记录到排行榜！");
+            hideNameModal();
+        } catch (error) {
+            console.error("上传成绩失败: ", error);
+            alert("上传成绩失败，请检查网络或控制台。");
+        } finally {
+            isSubmitting = false; // 无论成功或失败，都重置标志
+            submitNameBtn.disabled = false; // 重新启用提交按钮
+        }
     }
     
     // 8. 事件监听器

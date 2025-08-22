@@ -27,15 +27,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const nameInput = document.getElementById('player-name-input');
     const saveNameButton = document.getElementById('save-name-button');
     const modalScoreElement = document.getElementById('modal-score');
+    const cancelNameButton = document.getElementById('cancel-name-button');
 
     // 修复移动端点击游戏结束按钮无效的问题
     gameOverOverlay.addEventListener('touchstart', e => {
         e.stopPropagation();
-    }, { passive: false });
+    }, {
+        passive: false
+    });
 
     gameOverOverlay.addEventListener('touchend', e => {
         e.stopPropagation();
-    }, { passive: false });
+    }, {
+        passive: false
+    });
 
     const GRID_SIZE = 4;
     let grid = [];
@@ -43,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isAnimating = false;
     let cellPositions = [];
     let leaderboard = [];
+    let isSubmittingScore = false; // 新增：防止重复提交标志
 
     function cacheCellPositions() {
         cellPositions = [];
@@ -81,7 +87,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function newGame() {
-        grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0));
+        grid = Array.from({
+            length: GRID_SIZE
+        }, () => Array(GRID_SIZE).fill(0));
         updateScore(0);
         gameOverOverlay.classList.add('hidden');
         gameOverOverlay.classList.remove('flex');
@@ -102,11 +110,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const emptyCells = [];
         for (let r = 0; r < GRID_SIZE; r++) {
             for (let c = 0; c < GRID_SIZE; c++) {
-                if (grid[r][c] === 0) emptyCells.push({ r, c });
+                if (grid[r][c] === 0) emptyCells.push({
+                    r,
+                    c
+                });
             }
         }
         if (emptyCells.length > 0) {
-            const { r, c } = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            const {
+                r,
+                c
+            } = emptyCells[Math.floor(Math.random() * emptyCells.length)];
             const value = Math.random() < 0.9 ? 2 : 4;
             grid[r][c] = value;
             createTile(r, c, value, true);
@@ -131,7 +145,10 @@ document.addEventListener('DOMContentLoaded', () => {
             tile.style.fontSize = `${pos.width * 0.4}px`;
             if (value > 999) tile.style.fontSize = `${pos.width * 0.3}px`;
         } else {
-            console.error("无法找到单元格位置缓存: ", { row, col });
+            console.error("无法找到单元格位置缓存: ", {
+                row,
+                col
+            });
             return;
         }
 
@@ -142,7 +159,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isAnimating) return;
         isAnimating = true;
 
-        const { newGrid, scoreIncrease, moves } = processMove(direction);
+        const {
+            newGrid,
+            scoreIncrease,
+            moves
+        } = processMove(direction);
 
         if (JSON.stringify(grid) !== JSON.stringify(newGrid)) {
             grid = newGrid;
@@ -154,7 +175,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        setTimeout(() => { isAnimating = false; }, 150);
+        setTimeout(() => {
+            isAnimating = false;
+        }, 150);
     }
 
     function processMove(direction) {
@@ -165,45 +188,93 @@ document.addEventListener('DOMContentLoaded', () => {
         const isReverse = direction === 'right' || direction === 'down';
         for (let i = 0; i < GRID_SIZE; i++) {
             let line = [];
-            for (let j = 0; j < GRID_SIZE; j++) { line.push(isVertical ? newGrid[j][i] : newGrid[i][j]); }
-            const { newLine, lineScore, lineMoves } = processLine(line, isReverse);
+            for (let j = 0; j < GRID_SIZE; j++) {
+                line.push(isVertical ? newGrid[j][i] : newGrid[i][j]);
+            }
+            const {
+                newLine,
+                lineScore,
+                lineMoves
+            } = processLine(line, isReverse);
             scoreIncrease += lineScore;
             for (let j = 0; j < GRID_SIZE; j++) {
-                if (isVertical) { newGrid[j][i] = newLine[j]; } else { newGrid[i][j] = newLine[j]; }
+                if (isVertical) {
+                    newGrid[j][i] = newLine[j];
+                } else {
+                    newGrid[i][j] = newLine[j];
+                }
             }
             lineMoves.forEach(move => {
                 moves.push({
-                    from: isVertical ? { r: move.from, c: i } : { r: i, c: move.from },
-                    to: isVertical ? { r: move.to, c: i } : { r: i, c: move.to },
-                    value: move.value, isMerge: move.isMerge
+                    from: isVertical ? {
+                        r: move.from,
+                        c: i
+                    } : {
+                        r: i,
+                        c: move.from
+                    },
+                    to: isVertical ? {
+                        r: move.to,
+                        c: i
+                    } : {
+                        r: i,
+                        c: move.to
+                    },
+                    value: move.value,
+                    isMerge: move.isMerge
                 });
             });
         }
-        return { newGrid, scoreIncrease, moves };
+        return {
+            newGrid,
+            scoreIncrease,
+            moves
+        };
     }
 
     function processLine(line, isReverse) {
         if (isReverse) line.reverse();
         let filteredLine = line.filter(v => v !== 0);
-        let newLine = []; let lineScore = 0; let lineMoves = [];
+        let newLine = [];
+        let lineScore = 0;
+        let lineMoves = [];
         let originalIndices = [];
-        line.forEach((val, index) => { if (val !== 0) originalIndices.push(index); });
+        line.forEach((val, index) => {
+            if (val !== 0) originalIndices.push(index);
+        });
         for (let i = 0; i < filteredLine.length; i++) {
             if (i + 1 < filteredLine.length && filteredLine[i] === filteredLine[i + 1]) {
                 const mergedValue = filteredLine[i] * 2;
                 newLine.push(mergedValue);
                 lineScore += mergedValue;
                 const toIndex = newLine.length - 1;
-                lineMoves.push({ from: originalIndices[i], to: toIndex, value: filteredLine[i], isMerge: false });
-                lineMoves.push({ from: originalIndices[i + 1], to: toIndex, value: filteredLine[i + 1], isMerge: true });
+                lineMoves.push({
+                    from: originalIndices[i],
+                    to: toIndex,
+                    value: filteredLine[i],
+                    isMerge: false
+                });
+                lineMoves.push({
+                    from: originalIndices[i + 1],
+                    to: toIndex,
+                    value: filteredLine[i + 1],
+                    isMerge: true
+                });
                 i++;
             } else {
                 newLine.push(filteredLine[i]);
                 const toIndex = newLine.length - 1;
-                lineMoves.push({ from: originalIndices[i], to: toIndex, value: filteredLine[i], isMerge: false });
+                lineMoves.push({
+                    from: originalIndices[i],
+                    to: toIndex,
+                    value: filteredLine[i],
+                    isMerge: false
+                });
             }
         }
-        while (newLine.length < GRID_SIZE) { newLine.push(0); }
+        while (newLine.length < GRID_SIZE) {
+            newLine.push(0);
+        }
         if (isReverse) {
             newLine.reverse();
             lineMoves.forEach(move => {
@@ -211,7 +282,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 move.to = GRID_SIZE - 1 - move.to;
             });
         }
-        return { newLine, lineScore, lineMoves };
+        return {
+            newLine,
+            lineScore,
+            lineMoves
+        };
     }
 
     function animateMoves(moves) {
@@ -224,12 +299,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     tile.style.top = `${pos.top}px`;
                     tile.style.left = `${pos.left}px`;
                     tile.dataset.isMoving = true;
-                    movingTiles.push({ tile, move });
+                    movingTiles.push({
+                        tile,
+                        move
+                    });
                 }
             });
 
             setTimeout(() => {
-                movingTiles.forEach(({ tile, move }) => {
+                movingTiles.forEach(({
+                    tile,
+                    move
+                }) => {
                     if (move.isMerge) tile.remove();
                     else delete tile.dataset.isMoving;
                 });
@@ -244,7 +325,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         const pos = cellPositions[move.to.r][move.to.c];
                         targetTile.style.fontSize = `${pos.width * 0.4}px`;
                         if (newValue > 999) targetTile.style.fontSize = `${pos.width * 0.3}px`;
-                        targetTile.addEventListener('animationend', () => targetTile.classList.remove('tile-merged'), { once: true });
+                        targetTile.addEventListener('animationend', () => targetTile.classList.remove('tile-merged'), {
+                            once: true
+                        });
                     }
                 });
                 resolve();
@@ -254,7 +337,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function findTile(r, c, ignoreMoving = false) {
         if (!cellPositions[r] || !cellPositions[r][c]) return null;
-        const { top, left } = cellPositions[r][c];
+        const {
+            top,
+            left
+        } = cellPositions[r][c];
         for (const tile of tileContainer.children) {
             if (Math.abs(parseFloat(tile.style.top) - top) < 1 && Math.abs(parseFloat(tile.style.left) - left) < 1) {
                 if (ignoreMoving || !tile.dataset.isMoving) return tile;
@@ -264,7 +350,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function isGameOver() {
-        for (let r = 0; r < GRID_SIZE; r++) { for (let c = 0; c < GRID_SIZE; c++) { if (grid[r][c] === 0) return false; } }
+        for (let r = 0; r < GRID_SIZE; r++) {
+            for (let c = 0; c < GRID_SIZE; c++) {
+                if (grid[r][c] === 0) return false;
+            }
+        }
         for (let r = 0; r < GRID_SIZE; r++) {
             for (let c = 0; c < GRID_SIZE; c++) {
                 if (c < GRID_SIZE - 1 && grid[r][c] === grid[r][c + 1]) return false;
@@ -276,22 +366,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('keydown', e => {
         switch (e.key) {
-            case 'ArrowUp': e.preventDefault(); handleMove('up'); break;
-            case 'ArrowDown': e.preventDefault(); handleMove('down'); break;
-            case 'ArrowLeft': e.preventDefault(); handleMove('left'); break;
-            case 'ArrowRight': e.preventDefault(); handleMove('right'); break;
+            case 'ArrowUp':
+                e.preventDefault();
+                handleMove('up');
+                break;
+            case 'ArrowDown':
+                e.preventDefault();
+                handleMove('down');
+                break;
+            case 'ArrowLeft':
+                e.preventDefault();
+                handleMove('left');
+                break;
+            case 'ArrowRight':
+                e.preventDefault();
+                handleMove('right');
+                break;
         }
     });
 
-    let touchStartX = 0; let touchStartY = 0; let touchEndX = 0; let touchEndY = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchEndX = 0;
+    let touchEndY = 0;
 
     gameArea.addEventListener('touchstart', e => {
         e.preventDefault();
         touchStartX = e.changedTouches[0].clientX;
         touchStartY = e.changedTouches[0].clientY;
-    }, { passive: false });
+    }, {
+        passive: false
+    });
 
-    gameArea.addEventListener('touchmove', e => { e.preventDefault(); }, { passive: false });
+    gameArea.addEventListener('touchmove', e => {
+        e.preventDefault();
+    }, {
+        passive: false
+    });
 
     gameArea.addEventListener('touchend', e => {
         e.preventDefault();
@@ -301,8 +412,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     function handleSwipe() {
-        const dx = touchEndX - touchStartX; const dy = touchEndY - touchStartY;
-        const absDx = Math.abs(dx); const absDy = Math.abs(dy);
+        const dx = touchEndX - touchStartX;
+        const dy = touchEndY - touchStartY;
+        const absDx = Math.abs(dx);
+        const absDy = Math.abs(dy);
         if (Math.max(absDx, absDy) > 30) {
             handleMove(absDx > absDy ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
         }
@@ -333,13 +446,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 排行榜功能开始 ---
 
     function loadLeaderboard() {
-        db.collection("scores").orderBy("score", "desc").limit(10).get({ source: "server" })
+        db.collection("scores").orderBy("score", "desc").limit(10).get({
+                source: "server"
+            })
             .then(snapshot => {
                 leaderboard = snapshot.docs.map(doc => doc.data());
                 renderLeaderboard();
             })
             .catch(error => {
-                console.error("加载排行榜失败: ", error);
+                console.error("加载排行榜失败，切换离线模式: ", error);
                 leaderboard = [];
                 renderLeaderboard();
             });
@@ -365,7 +480,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 更新后的 checkAndSaveScore 函数，使用自定义模态框
     function checkAndSaveScore() {
         if (score > 0 && (leaderboard.length < 10 || score > leaderboard[leaderboard.length - 1].score)) {
             modalScoreElement.textContent = score;
@@ -374,12 +488,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 新增的保存名称函数
-    function saveScore() {
+    async function saveScore() {
+        // 检查是否正在提交，如果是则直接返回
+        if (isSubmittingScore) {
+            console.log("正在上传成绩，请勿重复操作。");
+            return;
+        }
+
         let playerName = nameInput.value.trim();
         if (playerName === "") {
             playerName = "匿名玩家";
         }
+        
+        // 设置标志为 true，表示提交开始
+        isSubmittingScore = true;
+        saveNameButton.disabled = true;
 
         const newRecord = {
             score: score,
@@ -387,15 +510,18 @@ document.addEventListener('DOMContentLoaded', () => {
             date: new Date().toLocaleString()
         };
 
-        db.collection("scores").add(newRecord)
-            .then(() => {
-                console.log("成绩上传成功!");
-                nameModal.classList.add('hidden');
-                loadLeaderboard();
-            })
-            .catch(error => {
-                console.error("上传成绩失败: ", error);
-            });
+        try {
+            await db.collection("scores").add(newRecord);
+            console.log("成绩上传成功!");
+            nameModal.classList.add('hidden');
+            loadLeaderboard();
+        } catch (error) {
+            console.error("上传成绩失败: ", error);
+        } finally {
+            // 无论成功或失败，都重置标志并重新启用按钮
+            isSubmittingScore = false;
+            saveNameButton.disabled = false;
+        }
     }
 
     // 监听保存按钮点击和回车键
@@ -404,6 +530,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Enter') {
             saveScore();
         }
+    });
+
+    // 新增：监听取消按钮点击，用于关闭模态框
+    cancelNameButton.addEventListener('click', () => {
+        nameModal.classList.add('hidden');
     });
 
     function endGame() {
