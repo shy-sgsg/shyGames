@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>扫雷游戏</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>扫雷</h1>
+        <div class="header">
+            <span id="mines-count">雷数: 10</span>
+            <span id="timer">时间: 0</span>
+        </div>
+        <div id="board" class="board"></div>
+        <div id="game-status" class="status-message"></div>
+        <div class="controls">
+            <button id="new-game-btn">新游戏</button>
+            <button id="leaderboard-btn">查看排行榜</button>
+            <button id="return-lobby-btn">返回大厅</button>
+        </div>
+        <div id="leaderboard-container" class="leaderboard-container hidden">
+            <h2>排行榜</h2>
+            <ol id="leaderboard-list"></ol>
+            <button id="close-leaderboard-btn">关闭</button>
+        </div>
+    </div>
+
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div id="name-modal" class="modal-content">
+            <h2>恭喜你，胜利了！</h2>
+            <p>请输入你的名字，将成绩上传到排行榜。</p>
+            <input type="text" id="player-name-input" placeholder="输入你的名字" maxlength="15">
+            <div class="modal-buttons">
+                <button id="submit-name-btn" class="modal-button">提交</button>
+                <button id="cancel-name-btn" class="modal-button">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
