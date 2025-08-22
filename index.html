@@ -1,84 +1,94 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>游戏大厅</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Noto Sans SC', sans-serif;
-            background-color: #f0f4f8;
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏大厅</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f0f4f8;
+        }
+    </style>
 </head>
 <body class="flex flex-col items-center min-h-screen p-6">
 
-    <div class="text-center mb-12">
-        <h1 class="text-5xl font-bold text-gray-800">我的游戏合集</h1>
-        <p class="text-gray-600 mt-2">点击下方的卡片开始游戏！</p>
-    </div>
+    <div class="text-center mb-12">
+        <h1 class="text-5xl font-bold text-gray-800">我的游戏合集</h1>
+        <p class="text-gray-600 mt-2">点击下方的卡片开始游戏！</p>
+    </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 w-full max-w-7xl">
+        <div class="flex flex-wrap justify-center gap-8 w-full max-w-7xl">
 
-        <a href="2048/index.html" class="game-card block bg-white rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden">
-            <div class="p-6 flex flex-col items-center justify-center h-48 bg-[#edc22e]">
-                <span class="text-6xl font-bold text-white">2048</span>
-            </div>
-            <div class="p-6">
-                <h2 class="text-2xl font-bold text-gray-800">2048 游戏</h2>
-                <p class="text-gray-600 mt-2">滑动方块，合成传奇数字！看看你能达到多高的分数。</p>
-            </div>
-        </a>
+        <a href="2048/index.html" class="game-card block bg-white rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.33%-1.5rem)] xl:w-[calc(25%-1.5rem)]">
+            <div class="p-6 flex flex-col items-center justify-center h-48 bg-[#edc22e]">
+                <span class="text-6xl font-bold text-white">2048</span>
+            </div>
+            <div class="p-6">
+                <h2 class="text-2xl font-bold text-gray-800">2048 游戏</h2>
+                <p class="text-gray-600 mt-2">滑动方块，合成传奇数字！看看你能达到多高的分数。</p>
+            </div>
+        </a>
 
-        <a href="数字华容道/index.html" class="game-card block bg-white rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden">
-            <div class="p-6 flex flex-col items-center justify-center h-48 bg-[#4CAF50]">
-                <span class="text-5xl font-bold text-white">数字华容道</span>
-            </div>
-            <div class="p-6">
-                <h2 class="text-2xl font-bold text-gray-800">数字华容道</h2>
-                <p class="text-gray-600 mt-2">移动方块，将数字按顺序排列，考验你的逻辑思维！</p>
-            </div>
-        </a>
+        <a href="数字华容道/index.html" class="game-card block bg-white rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.33%-1.5rem)] xl:w-[calc(25%-1.5rem)]">
+            <div class="p-6 flex flex-col items-center justify-center h-48 bg-[#4CAF50]">
+                <span class="text-5xl font-bold text-white">数字华容道</span>
+            </div>
+            <div class="p-6">
+                <h2 class="text-2xl font-bold text-gray-800">数字华容道</h2>
+                <p class="text-gray-600 mt-2">移动方块，将数字按顺序排列，考验你的逻辑思维！</p>
+            </div>
+        </a>
 
-        <a href="扫雷/index.html" class="game-card block bg-white rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden">
-            <div class="p-6 flex flex-col items-center justify-center h-48 bg-[#f44336]">
-                <span class="text-5xl font-bold text-white">扫雷</span>
-            </div>
-            <div class="p-6">
-                <h2 class="text-2xl font-bold text-gray-800">经典扫雷</h2>
-                <p class="text-gray-600 mt-2">避开隐藏的炸弹，用最快的速度通关，登上排行榜！</p>
-            </div>
-        </a>
+        <a href="扫雷/index.html" class="game-card block bg-white rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.33%-1.5rem)] xl:w-[calc(25%-1.5rem)]">
+            <div class="p-6 flex flex-col items-center justify-center h-48 bg-[#f44336]">
+                <span class="text-5xl font-bold text-white">扫雷</span>
+            </div>
+            <div class="p-6">
+                <h2 class="text-2xl font-bold text-gray-800">经典扫雷</h2>
+                <p class="text-gray-600 mt-2">避开隐藏的炸弹，用最快的速度通关，登上排行榜！</p>
+            </div>
+        </a>
 
-        <a href="flappyBird/index.html" class="game-card block bg-white rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden">
-            <div class="p-6 flex flex-col items-center justify-center h-48 bg-[#2ecc71]">
-                <span class="text-5xl font-bold text-white">Flappy Bird</span>
-            </div>
-            <div class="p-6">
-                <h2 class="text-2xl font-bold text-gray-800">Flappy Bird</h2>
-                <p class="text-gray-600 mt-2">控制小鸟穿过水管，挑战高分，成为 Flappy Bird 大师！</p>
-            </div>
-        </a>
-        
-        <div class="game-card bg-gray-200 rounded-xl shadow-md flex flex-col items-center justify-center p-6 text-center h-full opacity-60">
-            <div class="p-6 flex flex-col items-center justify-center h-48 w-full bg-gray-300 rounded-lg">
-                <span class="text-5xl font-bold text-gray-500">?</span>
-            </div>
-            <div class="p-6 w-full">
-                <h2 class="text-2xl font-bold text-gray-500">敬请期待</h2>
-                <p class="text-gray-500 mt-2">更多好玩的游戏正在路上...</p>
-            </div>
-        </div>
+        <a href="flappyBird/index.html" class="game-card block bg-white rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.33%-1.5rem)] xl:w-[calc(25%-1.5rem)]">
+            <div class="p-6 flex flex-col items-center justify-center h-48 bg-[#2ecc71]">
+                <span class="text-5xl font-bold text-white">Flappy Bird</span>
+            </div>
+            <div class="p-6">
+                <h2 class="text-2xl font-bold text-gray-800">Flappy Bird</h2>
+                <p class="text-gray-600 mt-2">控制小鸟穿过水管，挑战高分，成为 Flappy Bird 大师！</p>
+            </div>
+        </a>
 
-    </div>
+                <a href="贪吃蛇/index.html" class="game-card block bg-white rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.33%-1.5rem)] xl:w-[calc(25%-1.5rem)]">
+            <div class="p-6 flex flex-col items-center justify-center h-48 bg-[#3498db]">
+                <span class="text-5xl font-bold text-white">贪吃蛇</span>
+            </div>
+            <div class="p-6">
+                <h2 class="text-2xl font-bold text-gray-800">经典贪吃蛇</h2>
+                <p class="text-gray-600 mt-2">控制蛇吃掉食物，不断变长，小心不要撞到自己！</p>
+            </div>
+        </a>
 
-    <footer class="mt-12 text-center text-gray-500">
-        <p>&copy; 2025 游戏开发者</p>
-    </footer>
+        <div class="game-card bg-gray-200 rounded-xl shadow-md flex flex-col items-center justify-center p-6 text-center h-full opacity-60 w-full sm:w-[calc(50%-1rem)] lg:w-[calc(33.33%-1.5rem)] xl:w-[calc(25%-1.5rem)]">
+            <div class="p-6 flex flex-col items-center justify-center h-48 w-full bg-gray-300 rounded-lg">
+                <span class="text-5xl font-bold text-gray-500">?</span>
+            </div>
+            <div class="p-6 w-full">
+                <h2 class="text-2xl font-bold text-gray-500">敬请期待</h2>
+                <p class="text-gray-500 mt-2">更多好玩的游戏正在路上...</p>
+            </div>
+        </div>
+
+    </div>
+
+    <footer class="mt-12 text-center text-gray-500">
+        <p>&copy; 2025 游戏开发者</p>
+    </footer>
 
 </body>
 </html>
