@@ -32,8 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let tiles = [];
     let moveCounter = 0;
     let timer;
-    let seconds = 0;
+    let startTime; // 记录游戏开始时间戳
     let isGameRunning = false;
+    let isTimerRunning = false; // 新增：标记计时器是否已开始
 
     // 屏幕切换函数
     function showScreen(screenId) {
@@ -65,13 +66,13 @@ document.addEventListener('DOMContentLoaded', () => {
             tiles.push(num);
         });
 
+        // 重置所有状态
         moveCounter = 0;
-        seconds = 0;
         movesCount.textContent = 0;
-        timerDisplay.textContent = '00:00';
+        timerDisplay.textContent = '00:00.000';
         isGameRunning = true;
-        clearInterval(timer);
-        startTimer();
+        isTimerRunning = false;
+        clearInterval(timer); // 确保旧计时器停止
     }
 
     // 随机打乱数组（Fisher-Yates洗牌算法）
@@ -104,6 +105,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // 处理方块点击事件
     function handleTileClick(event) {
         if (!isGameRunning) return;
+
+        // 第一次移动时才启动计时器
+        if (!isTimerRunning) {
+            startTimer();
+            isTimerRunning = true;
+        }
+
         const clickedTile = event.target;
         if (!clickedTile.classList.contains('tile') || clickedTile.classList.contains('empty')) {
             return;
@@ -157,14 +165,16 @@ document.addEventListener('DOMContentLoaded', () => {
     async function endGame() {
         isGameRunning = false;
         clearInterval(timer);
+        const finalTime = (performance.now() - startTime) / 1000; // 计算最终用时（秒）
+        const finalTimeFormatted = formatTime(finalTime);
         
-        const playerName = prompt(`恭喜你，你用 ${movesCount.textContent} 步，在 ${timerDisplay.textContent} 内完成了游戏！\n请输入你的姓名，以记录到排行榜:`);
+        const playerName = prompt(`恭喜你，你用 ${movesCount.textContent} 步，在 ${finalTimeFormatted} 内完成了游戏！\n请输入你的姓名，以记录到排行榜:`);
         
         if (playerName && playerName.trim() !== "") {
             const newRecord = {
                 name: playerName.trim(),
                 moves: moveCounter,
-                time: seconds,
+                time: finalTime, // 存储毫秒级别的用时
                 date: new Date().toISOString()
             };
             try {
@@ -175,18 +185,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert("保存记录失败，请稍后重试。");
             }
         }
-        // 游戏结束后，停留在游戏界面
-        // 用户可自行选择返回大厅
     }
 
     // 计时器函数
     function startTimer() {
+        startTime = performance.now(); // 记录起始时间
         timer = setInterval(() => {
-            seconds++;
-            const min = Math.floor(seconds / 60).toString().padStart(2, '0');
-            const sec = (seconds % 60).toString().padStart(2, '0');
-            timerDisplay.textContent = `${min}:${sec}`;
-        }, 1000);
+            const elapsedTime = performance.now() - startTime;
+            const totalSeconds = Math.floor(elapsedTime / 1000);
+            const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+            const seconds = (totalSeconds % 60).toString().padStart(2, '0');
+            const milliseconds = Math.floor(elapsedTime % 1000).toString().padStart(3, '0');
+            timerDisplay.textContent = `${minutes}:${seconds}.${milliseconds}`;
+        }, 10); // 每10毫秒更新一次，平滑显示
+    }
+    
+    // 格式化时间函数
+    function formatTime(totalSeconds) {
+        const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+        const seconds = Math.floor(totalSeconds % 60).toString().padStart(2, '0');
+        const milliseconds = Math.floor((totalSeconds - Math.floor(totalSeconds)) * 1000).toString().padStart(3, '0');
+        return `${minutes}:${seconds}.${milliseconds}`;
     }
 
     // 获取并显示排行榜数据
@@ -194,15 +213,17 @@ document.addEventListener('DOMContentLoaded', () => {
         leaderboardLoading.style.display = 'block';
         leaderboardTableBody.innerHTML = '';
         try {
+            // orderBy("time") 将按照 time 字段（用时，浮点数）从小到大排序
             const snapshot = await leaderboardCollection.orderBy("time").limit(10).get();
             let rank = 1;
             snapshot.forEach(doc => {
                 const data = doc.data();
+                const formattedTime = formatTime(data.time);
                 const row = `
                     <tr>
                         <td>${rank++}</td>
                         <td>${data.name}</td>
-                        <td>${Math.floor(data.time / 60).toString().padStart(2, '0')}:${(data.time % 60).toString().padStart(2, '0')}</td>
+                        <td>${formattedTime}</td>
                         <td>${data.moves}</td>
                     </tr>
                 `;

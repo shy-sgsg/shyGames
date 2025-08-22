@@ -1,82 +1,64 @@
-<!--
- * @Author: shysgsg 1054733568@qq.com
- * @Date: 2025-08-21 21:20:11
- * @LastEditors: shysgsg 1054733568@qq.com
- * @LastEditTime: 2025-08-22 00:57:44
- * @FilePath: \web\index.html
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
--->
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>游戏大厅</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Noto Sans SC', sans-serif;
-            background-color: #f0f4f8;
-        }
-        .game-card {
-            min-width: 260px;
-            max-width: 400px;
-            margin: 0 auto;
-        }
-        @media (max-width: 1024px) {
-        .grid-cols-1 {
-        justify-items: center;
-        }
-        }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏大厅</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f0f4f8;
+        }
+    </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-6">
+<body class="flex flex-col items-center min-h-screen p-6">
 
-    <div class="text-center mb-12">
-        <h1 class="text-5xl font-bold text-gray-800">我的游戏合集</h1>
-        <p class="text-gray-600 mt-2">点击下方的卡片开始游戏！</p>
-    </div>
+    <div class="text-center mb-12">
+        <h1 class="text-5xl font-bold text-gray-800">我的游戏合集</h1>
+        <p class="text-gray-600 mt-2">点击下方的卡片开始游戏！</p>
+    </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 w-full max-w-7xl">
 
-        <a href="2048/2048v2.4.html" class="game-card block bg-white rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden">
-            <div class="p-6 flex flex-col items-center justify-center h-48 bg-[#edc22e]">
-                <span class="text-6xl font-bold text-white">2048</span>
-            </div>
-            <div class="p-6">
-                <h2 class="text-2xl font-bold text-gray-800">2048 游戏</h2>
-                <p class="text-gray-600 mt-2">滑动方块，合成传奇数字！看看你能达到多高的分数。</p>
-            </div>
-        </a>
+        <a href="2048/2048v2.4.html" class="game-card block bg-white rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+            <div class="p-6 flex flex-col items-center justify-center h-48 bg-[#edc22e]">
+                <span class="text-6xl font-bold text-white">2048</span>
+            </div>
+            <div class="p-6">
+                <h2 class="text-2xl font-bold text-gray-800">2048 游戏</h2>
+                <p class="text-gray-600 mt-2">滑动方块，合成传奇数字！看看你能达到多高的分数。</p>
+            </div>
+        </a>
 
-                <a href="数字华容道/index.html" class="game-card block bg-white rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden">
-            <div class="p-6 flex flex-col items-center justify-center h-48 bg-[#4CAF50]">
-                <span class="text-5xl font-bold text-white">数字华容道</span>
-            </div>
-            <div class="p-6">
-                <h2 class="text-2xl font-bold text-gray-800">数字华容道</h2>
-                <p class="text-gray-600 mt-2">移动方块，将数字按顺序排列，考验你的逻辑思维！</p>
-            </div>
-        </a>
+        <a href="数字华容道/index.html" class="game-card block bg-white rounded-xl shadow-lg hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden">
+            <div class="p-6 flex flex-col items-center justify-center h-48 bg-[#4CAF50]">
+                <span class="text-5xl font-bold text-white">数字华容道</span>
+            </div>
+            <div class="p-6">
+                <h2 class="text-2xl font-bold text-gray-800">数字华容道</h2>
+                <p class="text-gray-600 mt-2">移动方块，将数字按顺序排列，考验你的逻辑思维！</p>
+            </div>
+        </a>
 
-                <div class="game-card bg-gray-200 rounded-xl shadow-md flex flex-col items-center justify-center p-6 text-center h-full opacity-60">
-            <div class="p-6 flex flex-col items-center justify-center h-48 w-full bg-gray-300 rounded-lg">
-                <span class="text-5xl font-bold text-gray-500">?</span>
-            </div>
-            <div class="p-6 w-full">
-                <h2 class="text-2xl font-bold text-gray-500">敬请期待</h2>
-                <p class="text-gray-500 mt-2">更多好玩的游戏正在路上...</p>
-            </div>
-        </div>
+        <div class="game-card bg-gray-200 rounded-xl shadow-md flex flex-col items-center justify-center p-6 text-center h-full opacity-60">
+            <div class="p-6 flex flex-col items-center justify-center h-48 w-full bg-gray-300 rounded-lg">
+                <span class="text-5xl font-bold text-gray-500">?</span>
+            </div>
+            <div class="p-6 w-full">
+                <h2 class="text-2xl font-bold text-gray-500">敬请期待</h2>
+                <p class="text-gray-500 mt-2">更多好玩的游戏正在路上...</p>
+            </div>
+        </div>
 
-    </div>
+    </div>
 
-    <footer class="mt-12 text-center text-gray-500">
-        <p>&copy; 2025 游戏开发者</p>
-    </footer>
+    <footer class="mt-12 text-center text-gray-500">
+        <p>&copy; 2025 游戏开发者</p>
+    </footer>
 
 </body>
 </html>
