@@ -166,3 +166,4 @@ button:active { transform: translateY(0); filter: brightness(1); }
     .controls-container { grid-template-columns: 1fr; }
     .settings-btn { top: 1rem; right: 1rem; width: 28px; height: 28px; }
 }
+

@@ -272,8 +272,63 @@ function showHighScoresModal() {
 }
 
 // --- Firebase & Score Handling ---
-function submitScore(newScore, playerName) { /* ... same as before ... */ }
-function loadHighScores() { /* ... same as before ... */ }
+function submitScore(newScore, playerName) {
+    if (isSubmitting || isOfflineMode) return;
+    isSubmitting = true;
+    submitScoreBtn.textContent = '提交中...';
+
+    scoresCollection.add({
+        name: playerName,
+        score: newScore,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    })
+    .then(() => {
+        hideModal();
+    })
+    .catch(error => {
+        console.error("Score submission failed: ", error);
+        alert("提交失败，请检查网络后重试。");
+    })
+    .finally(() => {
+        isSubmitting = false;
+        submitScoreBtn.textContent = '提交分数';
+    });
+}
+
+function loadHighScores() {
+    if (isOfflineMode) {
+        highScoresListModal.innerHTML = '<li>排行榜当前不可用。</li>';
+        return;
+    }
+    
+    highScoresListModal.innerHTML = '<li>加载中...</li>';
+    scoresCollection.orderBy('score', 'desc').limit(10).get()
+    .then(snapshot => {
+        if (snapshot.empty) {
+            highScoresListModal.innerHTML = '<li>还没有人上榜，快来争夺第一！</li>';
+            return;
+        }
+        
+        highScoresListModal.innerHTML = '';
+        let rank = 1; // 手动初始化一个排名计数器
+        
+        snapshot.forEach(doc => {
+            const scoreData = doc.data();
+            const li = document.createElement('li');
+            
+            // 直接使用手动递增的 rank 变量来显示序号
+            li.innerHTML = `<span>${rank}. ${scoreData.name}</span><span>${scoreData.score}</span>`;
+            
+            highScoresListModal.appendChild(li);
+            rank++; // 每次循环后让排名加 1
+        });
+    })
+    .catch(error => {
+        console.error("Failed to load high scores: ", error);
+        isOfflineMode = true;
+        highScoresListModal.innerHTML = '<li>无法加载排行榜。</li>';
+    });
+}
 
 // --- Event Listeners ---
 // Game Controls
