@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>2048 游戏</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="game-body flex flex-col lg:flex-row items-center justify-center min-h-screen p-4 text-gray-800 space-y-8 lg:space-y-0 lg:space-x-8">
+
+    <div class="w-full max-w-md mx-auto flex flex-col items-center">
+        <header class="w-full">
+            <div class="flex items-center justify-between mb-2">
+                <h1 class="text-5xl font-bold text-gray-700">2048</h1>
+                <div class="flex items-center space-x-2">
+                    <a href="../index.html" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200">
+                        返回大厅
+                    </a>
+                    <div class="bg-gray-700 text-white p-2 px-4 rounded-lg text-center">
+                        <div class="text-xs uppercase font-bold tracking-wider">分数</div>
+                        <div id="score" class="text-2xl font-bold">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center justify-end space-x-2 w-full">
+                <button id="new-game-button" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200">
+                    新游戏
+                </button>
+                <button id="toggle-leaderboard-button" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200">
+                    查看排行榜
+                </button>
+            </div>
+        </header>
+
+        <main id="game-area" class="relative w-full">
+            <div id="game-over-overlay" class="absolute inset-0 bg-white/70 flex-col items-center justify-center rounded-lg z-30 hidden">
+                <h2 class="text-4xl font-bold text-gray-700 mb-2">游戏结束!</h2>
+                <button id="try-again-button" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition-colors duration-200">
+                    再试一次
+                </button>
+            </div>
+            
+            <div class="relative aspect-square w-full">
+                <div id="grid-container" class="grid-container aspect-square w-full"></div>
+                <div id="tile-container" class="absolute inset-0"></div>
+            </div>
+        </main>
+
+        <footer class="mt-4 text-center text-gray-500">
+            <p><strong>玩法:</strong> 使用<strong>方向键</strong>或<strong>滑动屏幕</strong>来移动数字块。当两个相同的数字块相遇时，它们会合并成一个新的数字块！</p>
+        </footer>
+    </div>
+    
+    <div id="leaderboard-container" class="w-full max-w-md lg:w-96 flex flex-col items-center bg-white p-6 rounded-lg shadow-lg max-h-[500px] overflow-y-auto hidden">
+        <h2 class="text-3xl font-bold text-gray-700 mb-4">排行榜</h2>
+        <ol id="leaderboard-list" class="w-full space-y-2 text-gray-700">
+        </ol>
+        <p id="no-scores-message" class="text-center text-gray-500 mt-4 hidden">暂无分数记录。</p>
+    </div>
+
+    <div id="name-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-sm text-center">
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">新纪录！🎉</h3>
+            <p class="text-gray-600 mb-4">你的分数是 <span id="modal-score" class="font-bold text-purple-600 text-xl"></span>。请留下你的名字，冲进排行榜吧！</p>
+            <div class="mb-4">
+            <input type="text" id="player-name-input" placeholder="请输入你的名字" class="w-full px-4 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:border-purple-500 text-center text-lg" maxlength="15">
+            </div>
+            <button id="save-name-button" class="w-full bg-purple-600 text-white font-bold py-3 rounded-md hover:bg-purple-700 transition-colors">
+            保存
+            </button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>
