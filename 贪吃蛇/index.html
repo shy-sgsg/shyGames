@@ -2,57 +2,71 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>经典贪吃蛇</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 </head>
 <body>
-    <div class="game-container">
-        <h1>贪吃蛇</h1>
-        <div class="score-container">
-            分数: <span id="score">0</span>
+    <div class="game-wrapper">
+        <div class="game-container">
+            <div id="settingsBtn" class="settings-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19.829 15.092L19.829 15.092 19.14 12.952C19.14 12.952 19.336 12.63 19.349 12.603C19.673 11.968 19.673 11.262 19.349 10.627C19.336 10.6 19.14 10.278 19.14 10.278L19.829 8.138C19.962 7.711 19.758 7.249 19.33 7.116L17.19 6.427C17.19 6.427 16.868 6.231 16.841 6.218C16.206 5.894 15.5 5.894 14.865 6.218C14.838 6.231 14.516 6.427 14.516 6.427L12.376 7.116C11.948 7.249 11.744 7.711 11.877 8.138L12.566 10.278C12.566 10.278 12.37 10.6 12.357 10.627C12.033 11.262 12.033 11.968 12.357 12.603C12.37 12.63 12.566 12.952 12.566 12.952L11.877 15.092C11.744 15.519 11.948 15.981 12.376 16.114L14.516 16.803C14.516 16.803 14.838 16.999 14.865 17.012C15.5 17.336 16.206 17.336 16.841 17.012C16.868 16.999 17.19 16.803 17.19 16.803L19.33 16.114C19.758 15.981 19.962 15.519 19.829 15.092ZM16.35 12.673C15.539 13.484 14.185 13.484 13.374 12.673C12.563 11.862 12.563 10.508 13.374 9.697C14.185 8.886 15.539 8.886 16.35 9.697C17.161 10.508 17.161 11.862 16.35 12.673Z" transform="translate(-1.357 -1.357) scale(1.12)"></path></svg>
+            </div>
+            <h1>贪吃蛇</h1>
+            <div class="score-container">
+                分数: <span id="score">0</span>
+            </div>
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+            <div class="controls-container">
+                <button id="startButton">开始游戏</button>
+                <button id="pauseButton" style="display: none;">暂停</button>
+                <button id="viewScoresBtn">排行榜</button>
+                <button id="hallButton">返回大厅</button>
+            </div>
         </div>
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
-        <div class="controls-container">
-            <button id="startButton">开始游戏</button>
-            <button id="pauseButton" style="display: none;">暂停</button>
-            <button id="viewScoresBtn">排行榜</button>
-            <button id="hallButton">返回大厅</button>
-        </div>
-        <div class="theme-switcher">
-            <p>主题:</p>
-            <button class="theme-button active" data-theme="green"></button>
-            <button class="theme-button" data-theme="blue"></button>
-            <button class="theme-button" data-theme="purple"></button>
+
+        <div id="dpadContainer" class="dpad-container hidden">
+            <div class="dpad-row">
+                <button class="dpad-btn" id="dpadUp">▲</button>
+            </div>
+            <div class="dpad-row">
+                <button class="dpad-btn" id="dpadLeft">◄</button>
+                <button class="dpad-btn" id="dpadDown">▼</button>
+                <button class="dpad-btn" id="dpadRight">►</button>
+            </div>
         </div>
     </div>
 
     <div id="modalOverlay" class="modal-overlay">
+        </div>
+
+    <div id="settingsModalOverlay" class="modal-overlay hidden">
         <div class="modal-content">
-            <span id="modalCloseBtn" class="modal-close-btn">&times;</span>
-            <h3 class="modal-title" id="modalTitle"></h3>
+            <span id="settingsCloseBtn" class="modal-close-btn">&times;</span>
+            <h3 class="modal-title">设置</h3>
             
-            <div id="gameOverContent">
-                <p>你的分数是: <span id="finalScore">0</span></p>
-                <div id="playerInfo">
-                    <p id="playerNameLabel">请输入你的名字:</p>
-                    <input type="text" id="playerNameInput" maxlength="10" placeholder="最多10个字符">
+            <div class="settings-section">
+                <h4>主题选择</h4>
+                <div class="settings-options">
+                    <button class="theme-option-btn" data-theme="classic">经典绿</button>
+                    <button class="theme-option-btn" data-theme="ocean">海洋蓝</button>
+                    <button class="theme-option-btn" data-theme="retro">复古风</button>
                 </div>
             </div>
 
-            <div id="highScoresContent" style="display: none;">
-                <ol id="highScoresListModal"></ol>
+            <div class="settings-section" id="mobileControlsSection">
+                <h4>移动端操控</h4>
+                <div class="settings-options">
+                    <button class="control-option-btn" data-control="swipe">滑动</button>
+                    <button class="control-option-btn" data-control="dpad">方向键</button>
+                </div>
             </div>
 
-            <div class="modal-buttons">
-                <button id="submitScoreBtn">提交分数</button>
-                <button id="closeScoresBtn" style="display: none;">关闭</button>
-            </div>
         </div>
     </div>
     
