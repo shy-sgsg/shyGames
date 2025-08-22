@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* 弹窗和排行榜样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            border-radius: 10px;
+            color: #333;
+            animation: fadeInScale 0.3s ease-in-out;
+        }
+        
+        .modal-content input, .modal-content button {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        
+        .modal-content button {
+            background-color: #27ae60;
+            color: white;
+            cursor: pointer;
+            border: none;
+            font-weight: bold;
+        }
+
+        .leaderboard-container {
+            /* 默认隐藏，通过 JS 控制显示 */
+            display: none; 
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            width: 250px;
+            color: white;
+        }
+
+        .leaderboard-container h2 {
+            margin-top: 0;
+            text-align: center;
+            color: #ffd700;
+        }
+
+        .leaderboard-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .leaderboard-list li {
+            padding: 5px 0;
+            border-bottom: 1px dashed #aaa;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .leaderboard-list li:last-child {
+            border-bottom: none;
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* 游戏控制按钮样式 */
+        .game-controls {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .game-controls button {
+            padding: 10px 15px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #e74c3c;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .game-controls button.pause {
+            background-color: #3498db;
+        }
+        
+        /* 排行榜按钮样式 */
+        #showLeaderboardBtn {
+            background-color: #f39c12;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Flappy Bird</h1>
+        <canvas id="gameCanvas" width="400" height="600"></canvas>
+        <div id="game-info">
+            <p>点击或按空格键开始游戏</p>
+            <p>分数: <span id="score">0</span></p>
+        </div>
+    </div>
+    
+    <div class="game-controls">
+        <button id="pauseBtn" class="pause">暂停</button>
+        <button id="showLeaderboardBtn">排行榜</button>
+        <button id="returnBtn">返回主页</button>
+    </div>
+
+    <div id="leaderboardContainer" class="leaderboard-container">
+        <h2>排行榜</h2>
+        <ol id="leaderboard" class="leaderboard-list">
+            </ol>
+    </div>
+
+    <div id="scoreModal" class="modal">
+        <div class="modal-content">
+            <p id="finalScore"></p>
+            <p id="modalMessage"></p>
+            <input type="text" id="playerName" placeholder="您的名字" maxlength="15">
+            <button id="submitScoreBtn">提交分数</button>
+        </div>
+    </div>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+      import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+      
+      const firebaseConfig = {
+        apiKey: "AIzaSyCIRI2D9937f3iwtCJXU6zabDMYT0R18dU",
+        authDomain: "game-2048-935e4.firebaseapp.com",
+        projectId: "game-2048-935e4",
+        storageBucket: "game-2048-935e4.appspot.com",
+        messagingSenderId: "561986111957",
+        appId: "1:561986111957:web:129c25516ad68c2920d55c"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      
+      window.db = db;
+      window.collection = collection;
+      window.addDoc = addDoc;
+      window.getDocs = getDocs;
+      window.query = query;
+      window.orderBy = orderBy;
+      window.limit = limit;
+    </script>
+    
+    <script src="script.js"></script>
+</body>
+</html>
