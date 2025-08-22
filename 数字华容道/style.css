@@ -158,3 +158,84 @@ button:hover {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* 自定义弹窗样式 */
+.modal {
+    display: none; /* 默认隐藏 */
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(5px); /* 背景模糊效果，更具现代感 */
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #e0d0b8;
+    padding: 25px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 350px;
+    text-align: center;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+    position: relative;
+    animation: fadeInScale 0.3s ease-out;
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modal-content h3 {
+    color: #8b5a2b;
+    font-size: 1.8em;
+    margin-top: 0;
+}
+
+#modal-message {
+    color: #4b382d;
+    font-size: 1.1em;
+}
+
+#player-name-input {
+    width: calc(100% - 20px);
+    padding: 10px;
+    margin: 15px 0;
+    border: 2px solid #a0856c;
+    border-radius: 5px;
+    font-size: 1em;
+    outline: none;
+    transition: border-color 0.3s;
+    background-color: #f8f0e3;
+    color: #4b382d;
+}
+
+#player-name-input:focus {
+    border-color: #8b5a2b;
+}
+
+.close-btn {
+    color: #4b382d;
+    position: absolute;
+    right: 15px;
+    top: 10px;
+    font-size: 2em;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-btn:hover {
+    color: #8b5a2b;
+}
