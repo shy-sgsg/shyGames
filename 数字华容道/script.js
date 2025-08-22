@@ -1,204 +1,150 @@
-// 由于现在从 CDN 加载 Firebase，不再需要 import 语句
-
-// Firebase 配置信息 (请替换成你自己的)
-const firebaseConfig = {
-    apiKey: "AIzaSyCIRI2D9937f3iwtCJXU6zabDMYT0R18dU",
-    authDomain: "game-2048-935e4.firebaseapp.com",
-    projectId: "game-2048-935e4",
-    storageBucket: "game-2048-935e4.appspot.com",
-    messagingSenderId: "561986111957",
-    appId: "1:561986111957:web:129c25516ad68c2920d55c"
-};
-
-let db = null;
-let leaderboardCollection = null;
-let isOfflineMode = false;
-
-// 尝试初始化 Firebase，如果失败则进入离线模式
-try {
-    // 使用全局可用的 firebase 变量
-    const app = firebase.initializeApp(firebaseConfig);
-    db = firebase.firestore();
-    // 使用独立的排行榜集合，避免与2048游戏冲突
-    leaderboardCollection = db.collection("fifteen_puzzle_leaderboard");
-    console.log("Firebase 数据库已成功连接。");
-} catch (e) {
-    console.error("Firebase 数据库连接失败，游戏将进入离线模式。", e);
-    isOfflineMode = true;
-}
-
 document.addEventListener('DOMContentLoaded', () => {
-    const gameBoard = document.getElementById('game-board');
-    const newGameBtn = document.getElementById('new-game-btn');
-    const movesCountSpan = document.getElementById('moves-count');
-    const timerSpan = document.getElementById('timer');
-    const winModal = document.getElementById('win-modal');
-    const closeModalBtn = document.getElementById('close-modal-btn');
-    const finalMovesSpan = document.getElementById('final-moves');
-    const finalTimeSpan = document.getElementById('final-time');
-    const leaderboardBtn = document.getElementById('leaderboard-btn');
-    const leaderboardModal = document.getElementById('leaderboard-modal');
-    const leaderboardList = document.getElementById('leaderboard-list');
-    const closeLeaderboardModalBtn = document.getElementById('close-leaderboard-modal-btn');
+    // Firebase 配置
+    const firebaseConfig = {
+        apiKey: "AIzaSyCIRI2D9937f3iwtCJXU6zabDMYT0R18dU",
+        authDomain: "game-2048-935e4.firebaseapp.com",
+        projectId: "game-2048-935e4",
+        storageBucket: "game-2048-935e4.appspot.com",
+        messagingSenderId: "561986111957",
+        appId: "1:561986111957:web:129c25516ad68c2920d55c"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const leaderboardCollection = db.collection("fifteen_puzzle_leaderboard");
+
+    // 获取DOM元素
+    const gameScreen = document.getElementById('game-screen');
+    const leaderboardScreen = document.getElementById('leaderboard-screen');
+
+    const showLeaderboardBtn = document.getElementById('show-leaderboard-btn');
     const backToLobbyBtn = document.getElementById('back-to-lobby-btn');
+    const backFromLeaderboardBtn = document.getElementById('back-from-leaderboard-btn');
+    const newGameBtn = document.getElementById('new-game-btn');
+    
+    const board = document.getElementById('puzzle-board');
+    const movesCount = document.getElementById('moves-count');
+    const timerDisplay = document.getElementById('timer');
+    const leaderboardTableBody = document.querySelector('#leaderboard-table tbody');
+    const leaderboardLoading = document.getElementById('leaderboard-loading');
 
+    // 游戏状态变量
     let tiles = [];
-    const gridSize = 4;
-    let moves = 0;
-    let timerInterval = null;
-    let startTime = 0;
-    let isAnimating = false;
+    let moveCounter = 0;
+    let timer;
+    let seconds = 0;
+    let isGameRunning = false;
 
-    // 如果处于离线模式，隐藏排行榜按钮
-    if (isOfflineMode) {
-        leaderboardBtn.style.display = 'none';
+    // 屏幕切换函数
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(screen => {
+            screen.classList.remove('active');
+        });
+        document.getElementById(screenId).classList.add('active');
     }
 
-    // 初始化游戏
+    // 游戏初始化函数
     function initGame() {
-        gameBoard.innerHTML = '';
+        board.innerHTML = '';
         tiles = [];
-        moves = 0;
-        movesCountSpan.textContent = moves;
-        clearInterval(timerInterval);
-        timerInterval = null;
-        timerSpan.textContent = '00:00';
-        startTime = 0;
-        winModal.style.display = 'none';
-        leaderboardModal.style.display = 'none';
-        isAnimating = false;
 
-        let solvable = false;
-        while (!solvable) {
-            const numbers = Array.from({ length: 15 }, (_, i) => i + 1);
-            shuffleArray(numbers);
-            tiles = [...numbers, 0];
+        let numbers = Array.from({ length: 16 }, (_, i) => i);
+        do {
+            shuffle(numbers);
+        } while (!isSolvable(numbers));
 
-            const inversions = countInversions(tiles);
-            const emptyRowFromBottom = 4 - Math.floor(tiles.indexOf(0) / gridSize);
-
-            if ((inversions % 2 === 0 && emptyRowFromBottom % 2 !== 0) ||
-                (inversions % 2 !== 0 && emptyRowFromBottom % 2 === 0)) {
-                solvable = true;
-            }
-        }
-        createAndPositionTiles();
-    }
-
-    // 获取尺寸和位置信息，避免重复计算
-    function getBoardMetrics() {
-        const boardStyle = window.getComputedStyle(gameBoard);
-        const paddingLeft = parseInt(boardStyle.paddingLeft);
-        const paddingTop = parseInt(boardStyle.paddingTop);
-        const boardContentSize = gameBoard.offsetWidth - paddingLeft - parseInt(boardStyle.paddingRight);
-        const gap = 8;
-        const tileSize = (boardContentSize - gap * (gridSize - 1)) / gridSize;
-        return { paddingLeft, paddingTop, tileSize, gap };
-    }
-
-    // 创建并设置方块位置
-    function createAndPositionTiles() {
-        gameBoard.innerHTML = '';
-        const { paddingLeft, paddingTop, tileSize, gap } = getBoardMetrics();
-
-        tiles.forEach((number, index) => {
+        numbers.forEach(num => {
             const tile = document.createElement('div');
             tile.classList.add('tile');
-            if (number === 0) {
-                tile.classList.add('empty-tile');
+            if (num === 0) {
+                tile.classList.add('empty');
             } else {
-                tile.textContent = number;
-                tile.dataset.number = number;
-                tile.addEventListener('click', handleTileClick);
+                tile.textContent = num;
             }
-            const row = Math.floor(index / gridSize);
-            const col = index % gridSize;
-            
-            tile.style.width = `${tileSize}px`;
-            tile.style.height = `${tileSize}px`;
-            // 调整 left 和 top 的计算，加上 padding
-            tile.style.left = `${col * (tileSize + gap) + paddingLeft}px`;
-            tile.style.top = `${row * (tileSize + gap) + paddingTop}px`;
-            tile.style.lineHeight = `${tileSize}px`;
-            tile.style.fontSize = `${Math.max(Math.min(tileSize * 0.4, 32), 16)}px`;
-
-            gameBoard.appendChild(tile);
+            board.appendChild(tile);
+            tiles.push(num);
         });
+
+        moveCounter = 0;
+        seconds = 0;
+        movesCount.textContent = 0;
+        timerDisplay.textContent = '00:00';
+        isGameRunning = true;
+        clearInterval(timer);
+        startTimer();
     }
 
-    // 更新方块的CSS位置
-    function updateTilesPosition() {
-        const { paddingLeft, paddingTop, tileSize, gap } = getBoardMetrics();
-        const allTiles = gameBoard.querySelectorAll('.tile');
+    // 随机打乱数组（Fisher-Yates洗牌算法）
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
 
-        allTiles.forEach(tileElement => {
-            const number = tileElement.dataset.number ? parseInt(tileElement.dataset.number) : 0;
-            const newIndex = tiles.indexOf(number);
-            const row = Math.floor(newIndex / gridSize);
-            const col = newIndex % gridSize;
-
-            tileElement.style.left = `${col * (tileSize + gap) + paddingLeft}px`;
-            tileElement.style.top = `${row * (tileSize + gap) + paddingTop}px`;
-        });
+    // 判断谜题是否可解
+    function isSolvable(arr) {
+        let inversions = 0;
+        for (let i = 0; i < arr.length; i++) {
+            if (arr[i] === 0) continue;
+            for (let j = i + 1; j < arr.length; j++) {
+                if (arr[j] !== 0 && arr[i] > arr[j]) {
+                    inversions++;
+                }
+            }
+        }
+        const emptyRowFromBottom = 4 - Math.floor(arr.indexOf(0) / 4);
+        if (emptyRowFromBottom % 2 === 0) {
+            return inversions % 2 !== 0;
+        } else {
+            return inversions % 2 === 0;
+        }
     }
 
     // 处理方块点击事件
     function handleTileClick(event) {
-        if (isAnimating) {
+        if (!isGameRunning) return;
+        const clickedTile = event.target;
+        if (!clickedTile.classList.contains('tile') || clickedTile.classList.contains('empty')) {
             return;
         }
-
-        if (!timerInterval) {
-            startTime = Date.now();
-            timerInterval = setInterval(updateTimer, 1000);
-        }
-
-        const clickedNumber = parseInt(event.target.dataset.number);
-        const tileIndex = tiles.indexOf(clickedNumber);
-        
+        const clickedIndex = Array.from(board.children).indexOf(clickedTile);
         const emptyIndex = tiles.indexOf(0);
-        const canMove = isMovable(tileIndex, emptyIndex);
 
-        if (canMove) {
-            isAnimating = true;
-            swapTiles(tileIndex, emptyIndex);
+        if (canMove(clickedIndex, emptyIndex)) {
+            swapTiles(clickedIndex, emptyIndex);
+            moveCounter++;
+            movesCount.textContent = moveCounter;
             
-            updateTilesPosition();
-            
-            setTimeout(() => {
-                isAnimating = false;
-                moves++;
-                movesCountSpan.textContent = moves;
-                
-                if (isSolved()) {
-                    showWinModal();
-                    clearInterval(timerInterval);
-                    if (!isOfflineMode) { // 只在在线模式下保存记录
-                        saveToLeaderboard();
-                    }
-                }
-            }, 250);
+            if (checkWin()) {
+                endGame();
+            }
         }
     }
 
-    // 判断方块是否可以移动
-    function isMovable(tileIndex, emptyIndex) {
-        const tileRow = Math.floor(tileIndex / gridSize);
-        const tileCol = tileIndex % gridSize;
-        const emptyRow = Math.floor(emptyIndex / gridSize);
-        const emptyCol = emptyIndex % gridSize;
-
-        return (tileRow === emptyRow && Math.abs(tileCol - emptyCol) === 1) ||
-               (tileCol === emptyCol && Math.abs(tileRow - emptyRow) === 1);
+    // 检查方块是否可移动（与空白方块相邻）
+    function canMove(clickedIndex, emptyIndex) {
+        const clickedRow = Math.floor(clickedIndex / 4);
+        const clickedCol = clickedIndex % 4;
+        const emptyRow = Math.floor(emptyIndex / 4);
+        const emptyCol = emptyIndex % 4;
+        return (clickedRow === emptyRow && Math.abs(clickedCol - emptyCol) === 1) || 
+               (clickedCol === emptyCol && Math.abs(clickedRow - emptyRow) === 1);
     }
 
-    // 交换方块位置
-    function swapTiles(i, j) {
-        [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+    // 交换DOM元素和数组中的值
+    function swapTiles(index1, index2) {
+        [tiles[index1], tiles[index2]] = [tiles[index2], tiles[index1]];
+        const tile1 = board.children[index1];
+        const tile2 = board.children[index2];
+        const tile1Clone = tile1.cloneNode(true);
+        const tile2Clone = tile2.cloneNode(true);
+        board.replaceChild(tile2Clone, tile1);
+        board.replaceChild(tile1Clone, tile2);
     }
-
-    // 判断游戏是否完成
-    function isSolved() {
+    
+    // 检查是否胜利
+    function checkWin() {
         for (let i = 0; i < tiles.length - 1; i++) {
             if (tiles[i] !== i + 1) {
                 return false;
@@ -207,120 +153,88 @@ document.addEventListener('DOMContentLoaded', () => {
         return tiles[15] === 0;
     }
 
-    // 显示胜利弹窗
-    function showWinModal() {
-        winModal.style.display = 'flex';
-        finalMovesSpan.textContent = moves;
-        finalTimeSpan.textContent = timerSpan.textContent;
-    }
-
-    // 计时器
-    function updateTimer() {
-        const elapsed = Date.now() - startTime;
-        const seconds = Math.floor(elapsed / 1000);
-        const minutes = Math.floor(seconds / 60);
-        const formattedSeconds = String(seconds % 60).padStart(2, '0');
-        const formattedMinutes = String(minutes).padStart(2, '0');
-        timerSpan.textContent = `${formattedMinutes}:${formattedSeconds}`;
-    }
-
-    // 数组洗牌算法
-    function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]];
-        }
-    }
-
-    // 计算逆序数，用于判断谜题可解性
-    function countInversions(arr) {
-        let inversions = 0;
-        const tempArr = arr.filter(n => n !== 0);
-        for (let i = 0; i < tempArr.length - 1; i++) {
-            for (let j = i + 1; j < tempArr.length; j++) {
-                if (tempArr[i] > tempArr[j]) {
-                    inversions++;
-                }
+    // 游戏结束
+    async function endGame() {
+        isGameRunning = false;
+        clearInterval(timer);
+        
+        const playerName = prompt(`恭喜你，你用 ${movesCount.textContent} 步，在 ${timerDisplay.textContent} 内完成了游戏！\n请输入你的姓名，以记录到排行榜:`);
+        
+        if (playerName && playerName.trim() !== "") {
+            const newRecord = {
+                name: playerName.trim(),
+                moves: moveCounter,
+                time: seconds,
+                date: new Date().toISOString()
+            };
+            try {
+                await leaderboardCollection.add(newRecord);
+                alert("记录已保存到排行榜!");
+            } catch (error) {
+                console.error("保存记录失败: ", error);
+                alert("保存记录失败，请稍后重试。");
             }
         }
-        return inversions;
+        // 游戏结束后，停留在游戏界面
+        // 用户可自行选择返回大厅
     }
 
-    // --- 排行榜功能 ---
-
-    // 将胜利记录保存到 Firestore
-    async function saveToLeaderboard() {
-        try {
-            const timeInSeconds = Math.floor((Date.now() - startTime) / 1000);
-            let playerName = prompt("恭喜通关！请输入您的名字：", "玩家");
-            if (playerName === null || playerName.trim() === "") {
-                playerName = "匿名玩家";
-            }
-            const now = new Date();
-            const dateStr = now.toLocaleString();
-            const docRef = await leaderboardCollection.add({
-                moves: moves,
-                time: timeInSeconds,
-                name: playerName.substring(0, 15),
-                date: dateStr
-            });
-            console.log("记录已添加到排行榜，ID: ", docRef.id);
-        } catch (e) {
-            console.error("添加记录失败: ", e);
-        }
+    // 计时器函数
+    function startTimer() {
+        timer = setInterval(() => {
+            seconds++;
+            const min = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const sec = (seconds % 60).toString().padStart(2, '0');
+            timerDisplay.textContent = `${min}:${sec}`;
+        }, 1000);
     }
 
-    // 从 Firestore 获取并显示排行榜
-    async function showLeaderboard() {
-        if (isOfflineMode) {
-            alert("当前处于离线模式，无法加载排行榜。");
-            return;
-        }
-
-        leaderboardList.innerHTML = '<li>加载中...</li>';
-        leaderboardModal.style.display = 'flex';
-
+    // 获取并显示排行榜数据
+    async function fetchLeaderboard() {
+        leaderboardLoading.style.display = 'block';
+        leaderboardTableBody.innerHTML = '';
         try {
-            const q = leaderboardCollection.orderBy("time").limit(20);
-            const querySnapshot = await q.get();
-
-            leaderboardList.innerHTML = '';
+            const snapshot = await leaderboardCollection.orderBy("time").limit(10).get();
             let rank = 1;
-            querySnapshot.forEach((doc) => {
+            snapshot.forEach(doc => {
                 const data = doc.data();
-                const minutes = Math.floor(data.time / 60);
-                const seconds = data.time % 60;
-                const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    <span class="rank-number">${rank}.</span>
-                    <span class="rank-data">玩家: ${data.name || "匿名"} 步数: ${data.moves}, 用时: ${formattedTime}, 时间: ${data.date || ""}</span>
+                const row = `
+                    <tr>
+                        <td>${rank++}</td>
+                        <td>${data.name}</td>
+                        <td>${Math.floor(data.time / 60).toString().padStart(2, '0')}:${(data.time % 60).toString().padStart(2, '0')}</td>
+                        <td>${data.moves}</td>
+                    </tr>
                 `;
-                leaderboardList.appendChild(li);
-                rank++;
+                leaderboardTableBody.innerHTML += row;
             });
-        } catch (e) {
-            console.error("获取排行榜失败: ", e);
-            leaderboardList.innerHTML = `<li>加载排行榜失败，请稍后重试。<br>错误：${e.message}</li>`;
+        } catch (error) {
+            console.error("获取排行榜失败: ", error);
+            leaderboardTableBody.innerHTML = '<tr><td colspan="4">获取排行榜数据失败。</td></tr>';
         }
+        leaderboardLoading.style.display = 'none';
     }
 
-    // 事件监听
-    newGameBtn.addEventListener('click', initGame);
-    closeModalBtn.addEventListener('click', initGame);
-    leaderboardBtn.addEventListener('click', showLeaderboard);
-    closeLeaderboardModalBtn.addEventListener('click', () => {
-        leaderboardModal.style.display = 'none';
+    // 事件监听器
+    showLeaderboardBtn.addEventListener('click', () => {
+        showScreen('leaderboard-screen');
+        fetchLeaderboard();
     });
+
     backToLobbyBtn.addEventListener('click', () => {
-        window.location.href = '../index.html';
+        isGameRunning = false;
+        clearInterval(timer);
+        window.location.href = '../index.html'; // 返回大厅的链接
+    });
+    
+    backFromLeaderboardBtn.addEventListener('click', () => {
+        showScreen('game-screen');
     });
 
-    initGame();
-});
+    newGameBtn.addEventListener('click', initGame);
 
-window.addEventListener('resize', () => {
-    // 窗口大小改变时，重新创建和定位所有方块
-    createAndPositionTiles();
+    board.addEventListener('click', handleTileClick);
+
+    // 页面加载时自动开始游戏
+    initGame();
 });

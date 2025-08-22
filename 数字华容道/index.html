@@ -1,49 +1,51 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>数字华容道</title>
-    <link rel="stylesheet" href="style.css">
-    
+    <title>数字华容道 - 游戏</title>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>数字华容道</h1>
-        <div class="info-bar">
-            <span>步数: <span id="moves-count">0</span></span>
-            <span>时间: <span id="timer">00:00</span></span>
-        </div>
-        <div class="game-board-container">
-            <div id="game-board"></div>
-        </div>
-        <div class="controls">
-            <button id="new-game-btn">新游戏</button>
-            <button id="leaderboard-btn">排行榜</button>
-            <button id="back-to-lobby-btn">返回大厅</button>
+    <div id="game-screen" class="screen active">
+        <div class="game-container">
+            <h1>数字华容道</h1>
+            <div id="puzzle-board" class="puzzle-board">
+                </div>
+            <div class="info-container">
+                <p>步数: <span id="moves-count">0</span></p>
+                <p>时间: <span id="timer">00:00</span></p>
+            </div>
+            <div class="button-group">
+                <button id="new-game-btn">新游戏</button>
+                <button id="show-leaderboard-btn">排行榜</button>
+                <button id="back-to-lobby-btn">返回大厅</button>
+            </div>
         </div>
     </div>
 
-    <div id="win-modal" class="modal">
-        <div class="modal-content">
-            <h2>恭喜！你赢了！</h2>
-            <p>总步数: <span id="final-moves"></span></p>
-            <p>总用时: <span id="final-time"></span></p>
-            <button id="close-modal-btn">再来一局</button>
-        </div>
-    </div>
-    
-    <div id="leaderboard-modal" class="modal">
-        <div class="modal-content">
+    <div id="leaderboard-screen" class="screen">
+        <div class="leaderboard-container">
             <h2>排行榜</h2>
-            <ol id="leaderboard-list"></ol>
-            <button id="close-leaderboard-modal-btn">关闭</button>
+            <div class="loading-spinner" id="leaderboard-loading"></div>
+            <table id="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>姓名</th>
+                        <th>用时</th>
+                        <th>步数</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    </tbody>
+            </table>
+            <button id="back-from-leaderboard-btn">返回</button>
         </div>
     </div>
-    
+
     <script src="script.js"></script>
 </body>
 </html>

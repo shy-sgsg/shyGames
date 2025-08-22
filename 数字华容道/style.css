@@ -1,184 +1,160 @@
 body {
-    background-color: #f0f8ff;
-    font-family: Arial, sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
+    background-color: #f5f5dc;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
-    overflow: hidden;
-    color: #333;
-    font-size: 16px;
-    line-height: 1.6;
 }
 
-.container {
+/* 屏幕切换 */
+.screen {
+    display: none;
     text-align: center;
-    padding: 20px;
-    border-radius: 12px;
-    background: linear-gradient(145deg, #e6e6e6, #ffffff);
-    box-shadow: 10px 10px 30px #d1d1d1, -10px -10px 30px #ffffff;
-    max-width: 480px;
-    width: 90%;
+    width: 100%;
+    max-width: 450px;
+}
+
+.screen.active {
+    display: block;
+}
+
+/* 容器样式 */
+.game-container, .leaderboard-container {
+    background-color: #e0d0b8;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 h1 {
     font-size: 2.5em;
-    color: #4a4a4a;
-    text-shadow: 1px 1px 2px #c9c9c9;
-    margin-bottom: 20px;
+    color: #8b5a2b;
 }
 
-.info-bar {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px 20px;
+h2 {
+    color: #4b382d;
+}
+
+/* 按钮样式 */
+button {
+    padding: 12px 30px;
     font-size: 1.2em;
-    font-weight: bold;
-    color: #666;
-    margin-bottom: 20px;
+    background-color: #a0856c;
+    border: none;
+    color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.game-board-container {
-    width: 100%;
-    max-width: 360px;
-    aspect-ratio: 1 / 1;
-    margin: 0 auto 20px;
-    position: relative;
+button:hover {
+    background-color: #8b6e5b;
+    transform: translateY(-2px);
 }
 
-#game-board {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    background-color: #bbada0;
-    border-radius: 8px;
-    padding: 8px;
-    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+.button-group {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+/* 游戏方块样式 (与之前相同) */
+.puzzle-board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-gap: 5px;
+    width: 320px;
+    height: 320px;
+    margin: 20px auto;
+    background-color: #8b5a2b;
+    padding: 5px;
+    border-radius: 10px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
 }
 
 .tile {
-    position: absolute;
-    background-color: #cdc1b4;
-    border-radius: 4px;
     display: flex;
     justify-content: center;
     align-items: center;
+    font-size: 2em;
     font-weight: bold;
-    color: #776e65;
+    background-color: #d2b48c;
+    color: #4b382d;
+    border-radius: 8px;
     cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
     user-select: none;
-    touch-action: none;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-    transition: left 0.2s ease-in-out, top 0.2s ease-in-out, font-size 0.2s ease-in-out, line-height 0.2s ease-in-out;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
 }
 
-.empty-tile {
-    background-color: rgba(205, 193, 180, 0);
-    box-shadow: none;
+.tile:hover {
+    transform: translateY(-3px);
+    background-color: #c4a179;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.tile.empty {
+    background-color: transparent;
     cursor: default;
+    box-shadow: none;
 }
 
-.controls {
-    margin-top: 20px;
+.info-container {
     display: flex;
     justify-content: space-around;
-}
-
-.controls button {
-    padding: 10px 20px;
-    font-size: 1em;
-    font-weight: bold;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    background-color: #8f7a66;
-    color: #fff;
-    transition: background-color 0.3s;
-}
-
-.controls button:hover {
-    background-color: #776e65;
-}
-
-/* 弹窗样式 */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 100;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    justify-content: center;
-    align-items: center;
-}
-
-.modal-content {
-    background-color: #fff;
-    padding: 30px;
-    border-radius: 12px;
-    text-align: center;
-    max-width: 90%;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
-
-.modal-content h2 {
-    font-size: 2em;
-    color: #4a4a4a;
-    margin-bottom: 15px;
-}
-
-.modal-content p {
+    margin-top: 20px;
     font-size: 1.2em;
-    color: #666;
-    margin-bottom: 10px;
+    color: #665445;
 }
 
-#leaderboard-list {
-    list-style-position: inside;
-    list-style-type: decimal;
-    padding-left: 0;
+/* 排行榜样式 */
+.leaderboard-container {
     text-align: left;
-    max-height: 300px;
-    overflow-y: auto;
+}
+
+#leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
     margin-top: 20px;
+    color: #4b382d;
 }
 
-#leaderboard-list li {
-    background-color: #f8f8f8;
-    padding: 8px 12px;
-    border-radius: 6px;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
+#leaderboard-table th, #leaderboard-table td {
+    padding: 12px;
+    border-bottom: 1px solid #c4a179;
+    text-align: center;
 }
 
-#leaderboard-list .rank-number {
-    font-weight: bold;
-    width: 30px;
-    flex-shrink: 0;
-}
-
-#leaderboard-list .rank-data {
-    font-size: 0.9em;
-    color: #555;
-    word-break: break-all;
-}
-
-.modal-content button {
-    margin-top: 20px;
-    padding: 12px 24px;
-    font-size: 1em;
-    background-color: #8f7a66;
+#leaderboard-table th {
+    background-color: #a0856c;
     color: #fff;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s;
 }
 
-.modal-content button:hover {
-    background-color: #776e65;
+#leaderboard-table tbody tr:nth-child(odd) {
+    background-color: #e0d0b8;
+}
+
+#leaderboard-table tbody tr:hover {
+    background-color: #d2b48c;
+}
+
+.loading-spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #8b5a2b;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+    display: none;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
