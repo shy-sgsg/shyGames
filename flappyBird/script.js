@@ -2,17 +2,29 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const scoreDisplay = document.getElementById('score');
-const infoDisplay = document.getElementById('game-info').querySelector('p');
-const modal = document.getElementById('scoreModal');
-const finalScoreText = document.getElementById('finalScore');
+const messageDisplay = document.getElementById('message');
+
+// 弹窗和按钮
+const scoreModal = document.getElementById('scoreModal');
+const leaderboardModal = document.getElementById('leaderboardModal');
+const finalScoreText = document.getElementById('finalScoreText');
+const finalScoreTitle = document.getElementById('finalScoreTitle');
 const modalMessage = document.getElementById('modalMessage');
 const playerNameInput = document.getElementById('playerName');
 const submitScoreBtn = document.getElementById('submitScoreBtn');
+const restartBtn = document.getElementById('restartBtn');
+const submitContainer = document.getElementById('submit-container');
+const retryContainer = document.getElementById('retry-container');
+const closeScoreModalBtn = document.getElementById('closeScoreModalBtn');
+const closeLeaderboardBtn = document.getElementById('closeLeaderboardBtn');
 const leaderboardList = document.getElementById('leaderboard');
-const leaderboardContainer = document.getElementById('leaderboardContainer');
-const returnBtn = document.getElementById('returnBtn');
 const pauseBtn = document.getElementById('pauseBtn');
 const showLeaderboardBtn = document.getElementById('showLeaderboardBtn');
+const returnBtn = document.getElementById('returnBtn');
+
+// 开始界面
+const startScreen = document.getElementById('startScreen');
+const startGameBtn = document.getElementById('startGameBtn');
 
 // 游戏常量 - 基础值
 const BIRD_SIZE = 30;
@@ -21,10 +33,10 @@ const GRAVITY = 0.4;
 const JUMP = -8;
 
 // 动态难度参数
-let PIPE_WIDTH = 40;
+let PIPE_WIDTH = 50;
 let PIPE_GAP = 200;
-let PIPE_SPEED = 2;
-let PIPE_SPACING = 300;
+let PIPE_SPEED = 2.5;
+let PIPE_SPACING = 350;
 
 // 游戏变量
 let birdY = canvas.height / 2;
@@ -78,16 +90,14 @@ function updateDifficulty() {
     const maxDifficulty = 5;
     const clampedLevel = Math.min(difficultyLevel, maxDifficulty);
     
-    PIPE_SPEED = 2 + clampedLevel * 0.3;
-    PIPE_GAP = 200 - clampedLevel * 10;
-    PIPE_SPACING = 300 - clampedLevel * 15;
+    PIPE_SPEED = 2.5 + clampedLevel * 0.4;
+    PIPE_GAP = 200 - clampedLevel * 12;
+    PIPE_SPACING = 350 - clampedLevel * 20;
 }
 
 // 更新游戏状态
 function update() {
-    if (isGameOver || !isGameStarted || isGamePaused) {
-        return;
-    }
+    if (isGameOver || !isGameStarted || isGamePaused) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     birdVelocity += GRAVITY;
@@ -101,10 +111,12 @@ function update() {
     drawPipes();
     pipes = pipes.filter(pipe => pipe.x + PIPE_WIDTH > 0);
 
+    // 碰撞检测 - 边界
     if (bird.y + bird.size > canvas.height || bird.y < 0) {
         endGame();
     }
 
+    // 碰撞检测 - 水管
     pipes.forEach(pipe => {
         if (
             bird.x < pipe.x + PIPE_WIDTH &&
@@ -134,23 +146,22 @@ function endGame() {
     isGameOver = true;
     isGameStarted = false;
     cancelAnimationFrame(animationId);
-    infoDisplay.textContent = `游戏结束！你的分数是 ${score}。`;
+    
+    const isTopTen = topScores.length < 10 || score > Math.min(...topScores.map(s => s.score));
 
-    const isTopTen = topScores.length < 10 || score > Math.min(...topScores);
+    finalScoreText.textContent = `你的分数是：${score}`;
 
-    if (isTopTen) {
-        finalScoreText.textContent = `恭喜你！进入排行榜！你的分数：${score}`;
-        modalMessage.textContent = '请输入您的名字：';
-        playerNameInput.style.display = 'block';
-        submitScoreBtn.style.display = 'block';
+    if (!window.isOfflineMode && isTopTen && score > 0) {
+        finalScoreTitle.textContent = "恭喜！新纪录！";
+        submitContainer.style.display = 'block';
+        retryContainer.style.display = 'none';
     } else {
-        finalScoreText.textContent = `游戏结束！你的分数：${score}`;
-        modalMessage.textContent = '未进入前十名，无法提交分数。';
-        playerNameInput.style.display = 'none';
-        submitScoreBtn.style.display = 'none';
+        finalScoreTitle.textContent = "游戏结束！";
+        submitContainer.style.display = 'none';
+        retryContainer.style.display = 'block';
     }
     
-    modal.style.display = 'flex';
+    scoreModal.style.display = 'flex';
 }
 
 // 重置游戏
@@ -163,146 +174,160 @@ function resetGame() {
     isGameStarted = false;
     isGamePaused = false;
     scoreDisplay.textContent = score;
-    infoDisplay.textContent = '点击或按空格键开始游戏';
+    messageDisplay.textContent = '点击屏幕或按空格键开始';
     
-    modal.style.display = 'none';
+    // 关闭所有弹窗并显示开始界面
+    scoreModal.style.display = 'none';
+    leaderboardModal.style.display = 'none';
+    startScreen.style.display = 'flex';
+    
     playerNameInput.value = '';
     submitScoreBtn.disabled = false;
     
-    PIPE_WIDTH = 40;
+    PIPE_WIDTH = 50;
     PIPE_GAP = 200;
-    PIPE_SPEED = 2;
-    PIPE_SPACING = 300;
+    PIPE_SPEED = 2.5;
+    PIPE_SPACING = 350;
     
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     bird.draw();
 }
 
+// 开始游戏
+function startGame() {
+    if (isGameStarted) return;
+    startScreen.style.display = 'none';
+    isGameStarted = true;
+    messageDisplay.textContent = '加油！';
+    createPipe();
+    update();
+}
+
 // 暂停/继续游戏
 function pauseGame() {
-    if (isGameOver) {
-        return;
-    }
-
+    if (isGameOver || !isGameStarted) return;
     isGamePaused = !isGamePaused;
-
     if (isGamePaused) {
         pauseBtn.textContent = '继续';
-        infoDisplay.textContent = '游戏已暂停';
+        messageDisplay.textContent = '游戏已暂停';
+        cancelAnimationFrame(animationId);
     } else {
         pauseBtn.textContent = '暂停';
-        infoDisplay.textContent = '点击或按空格键跳跃！';
+        messageDisplay.textContent = '加油！';
         update();
     }
 }
 
 // 跳跃功能
 function jump() {
+    if (isGameOver || isGamePaused) return;
     if (!isGameStarted) {
-        isGameStarted = true;
-        infoDisplay.textContent = '点击或按空格键跳跃！';
-        createPipe();
-        update();
-        return;
+        startGame();
     }
-    if (isGameOver) {
-        resetGame();
-        return;
-    }
-    
     birdVelocity = JUMP;
 }
 
 // 提交分数到 Firebase
 async function submitScore() {
+    if (window.isOfflineMode) return;
     const playerName = playerNameInput.value.trim() || '匿名玩家';
-    
     submitScoreBtn.disabled = true;
 
-    if (window.db) {
-        try {
-            await window.addDoc(window.collection(window.db, "flappy_bird_scores"), {
-                name: playerName,
-                score: score,
-                timestamp: new Date()
-            });
-            console.log("分数已成功提交！");
-            modal.style.display = 'none';
-            loadLeaderboard();
-            resetGame();
-        } catch (e) {
-            console.error("提交分数时出错: ", e);
-            alert("提交分数失败，请检查网络或配置。");
-        } finally {
-            submitScoreBtn.disabled = false;
-        }
-    } else {
-        alert("Firebase 未正确加载，请检查配置。");
-        modal.style.display = 'none';
+    try {
+        await window.addDoc(window.collection(window.db, "flappy_bird_scores"), {
+            name: playerName,
+            score: score,
+            timestamp: new Date()
+        });
+        console.log("分数已成功提交！");
+    } catch (e) {
+        console.error("提交分数时出错: ", e);
+        alert("提交失败，可能是网络问题。");
+    } finally {
+        scoreModal.style.display = 'none';
         resetGame();
+        toggleLeaderboard(true); // 提交后自动打开排行榜
     }
 }
 
 // 从 Firebase 加载排行榜
 async function loadLeaderboard() {
-    if (!window.db) return;
+    if (window.isOfflineMode) return;
     try {
         const scoresRef = window.collection(window.db, "flappy_bird_scores");
         const q = window.query(scoresRef, window.orderBy("score", "desc"), window.limit(10));
         const querySnapshot = await window.getDocs(q);
         
         topScores = [];
-        leaderboardList.innerHTML = '';
+        leaderboardList.innerHTML = '<li>正在加载...</li>';
+        let content = '';
         querySnapshot.forEach(doc => {
             const data = doc.data();
-            topScores.push(data.score);
-            const li = document.createElement('li');
-            li.innerHTML = `<span>${data.name}</span><span>${data.score}</span>`;
-            leaderboardList.appendChild(li);
+            topScores.push(data);
+            content += `<li><span>${data.name}</span><span>${data.score}</span></li>`;
         });
+        leaderboardList.innerHTML = content || '<li>排行榜暂无数据</li>';
     } catch (e) {
         console.error("加载排行榜时出错: ", e);
+        leaderboardList.innerHTML = '<li>加载失败</li>';
     }
 }
 
 // 切换排行榜显示状态
-function toggleLeaderboard() {
-    const isVisible = leaderboardContainer.style.display === 'block';
-    if (isVisible) {
-        leaderboardContainer.style.display = 'none';
-    } else {
-        leaderboardContainer.style.display = 'block';
+function toggleLeaderboard(show) {
+    const isVisible = leaderboardModal.style.display === 'flex';
+    if (show === true || !isVisible) {
         loadLeaderboard(); // 每次显示时都加载最新数据
+        leaderboardModal.style.display = 'flex';
+        // 如果游戏正在进行，则暂停
+        if (isGameStarted && !isGamePaused && !isGameOver) {
+            pauseGame();
+        }
+    } else {
+        leaderboardModal.style.display = 'none';
     }
 }
 
-// 事件监听
-canvas.addEventListener('mousedown', () => {
-    // 如果游戏暂停，则继续游戏；否则，跳跃
-    if (isGamePaused) {
-        pauseGame();
-    } else {
+// 离线模式处理
+function enterOfflineMode() {
+    console.warn("正处于离线模式，排行榜功能不可用。");
+    showLeaderboardBtn.style.display = 'none'; // 隐藏排行榜按钮
+    messageDisplay.textContent = "离线模式";
+}
+
+// --- 事件监听 ---
+canvas.addEventListener('mousedown', jump);
+document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+        e.preventDefault(); // 防止页面滚动
         jump();
     }
 });
 
-document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space') {
-        // 如果游戏暂停，则继续游戏；否则，跳跃
-        if (isGamePaused) {
-            pauseGame();
-        } else {
-            jump();
-        }
-    }
+startGameBtn.addEventListener('click', jump);
+submitScoreBtn.addEventListener('click', submitScore);
+restartBtn.addEventListener('click', resetGame);
+pauseBtn.addEventListener('click', pauseGame);
+showLeaderboardBtn.addEventListener('click', () => toggleLeaderboard());
+closeLeaderboardBtn.addEventListener('click', () => toggleLeaderboard(false));
+closeScoreModalBtn.addEventListener('click', () => {
+    scoreModal.style.display = 'none';
+    resetGame();
 });
 
-submitScoreBtn.addEventListener('click', submitScore);
-pauseBtn.addEventListener('click', pauseGame);
-showLeaderboardBtn.addEventListener('click', toggleLeaderboard);
 returnBtn.addEventListener('click', () => {
-    window.location.href = '../index.html';
+    // 根据您的项目结构，可能需要调整路径
+    window.location.href = '../index.html'; 
 });
 
 // 初始加载
-resetGame();
+function initializeGame() {
+    if (window.isOfflineMode) {
+        enterOfflineMode();
+    }
+    resetGame();
+    loadLeaderboard(); // 预加载排行榜数据
+}
+
+// 等待 Firebase 初始化完成
+setTimeout(initializeGame, 500);

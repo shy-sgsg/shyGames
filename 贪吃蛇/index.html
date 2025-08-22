@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>精美的贪吃蛇</title>
+    <title>经典贪吃蛇</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -11,33 +14,35 @@
 <body>
     <div class="game-container">
         <h1>贪吃蛇</h1>
+        <div class="score-container">
+            分数: <span id="score">0</span>
+        </div>
         <canvas id="gameCanvas" width="400" height="400"></canvas>
         <div class="controls-container">
-            <div class="score-container">
-                分数: <span id="score">0</span>
-            </div>
-            <div class="buttons">
-                <button id="startButton">开始游戏</button>
-                <button id="pauseButton" style="display: none;">暂停</button>
-                <button id="viewScoresBtn">查看排行榜</button>
-                <button id="hallButton">返回大厅</button>
-            </div>
+            <button id="startButton">开始游戏</button>
+            <button id="pauseButton" style="display: none;">暂停</button>
+            <button id="viewScoresBtn">排行榜</button>
+            <button id="hallButton">返回大厅</button>
         </div>
-        
         <div class="theme-switcher">
+            <p>主题:</p>
             <button class="theme-button active" data-theme="green"></button>
             <button class="theme-button" data-theme="blue"></button>
+            <button class="theme-button" data-theme="purple"></button>
         </div>
     </div>
 
     <div id="modalOverlay" class="modal-overlay">
         <div class="modal-content">
+            <span id="modalCloseBtn" class="modal-close-btn">&times;</span>
             <h3 class="modal-title" id="modalTitle"></h3>
             
             <div id="gameOverContent">
-                <p>你的分数是: <span id="finalScore" style="font-size: 1.5rem; color: var(--score-color);">0</span></p>
-                <p id="playerNameLabel">请输入你的名字:</p>
-                <input type="text" id="playerNameInput" class="name-input" placeholder="最多10个字符">
+                <p>你的分数是: <span id="finalScore">0</span></p>
+                <div id="playerInfo">
+                    <p id="playerNameLabel">请输入你的名字:</p>
+                    <input type="text" id="playerNameInput" maxlength="10" placeholder="最多10个字符">
+                </div>
             </div>
 
             <div id="highScoresContent" style="display: none;">
@@ -45,8 +50,8 @@
             </div>
 
             <div class="modal-buttons">
-                <button id="submitScoreBtn" class="button">提交分数</button>
-                <button id="closeScoresBtn" class="button" style="display: none;">关闭</button>
+                <button id="submitScoreBtn">提交分数</button>
+                <button id="closeScoresBtn" style="display: none;">关闭</button>
             </div>
         </div>
     </div>
